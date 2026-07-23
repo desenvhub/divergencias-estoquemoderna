@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Controle de Divergências de Saldos</title>
+<style>
+  :root{
+    --bg: #eef1f5;
+    --panel: #ffffff;
+    --ink: #1c2b3a;
+    --ink-soft: #56697c;
+    --line: #dfe4ea;
+    --navy: #1e3a5f;
+    --navy-deep: #14283f;
+    --teal: #2c7a7b;
+    --amber: #b8860b;
+    --amber-bg: #fff6e0;
+    --red: #b3261e;
+    --red-bg: #fdecea;
+    --green: #1e7d4b;
+    --green-bg: #e8f6ee;
+    --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+  }
+  .app{ max-width:1280px; margin:0 auto; padding:24px 20px 60px; }
+
+  /* HEADER */
+  .hdr{
+    background: linear-gradient(135deg, var(--navy-deep), var(--navy));
+    border-radius:14px; padding:22px 26px; color:#fff;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:24px;
+    flex-wrap:wrap;
+  }
+  .hdr h1{ margin:0 0 4px; font-size:1.5rem; font-weight:700; letter-spacing:-0.01em;}
+  .hdr .sub{ color:#c9d6e3; font-size:0.85rem; margin:0;}
+  .hdr-right{ display:flex; gap:14px; align-items:center; flex-wrap:wrap;}
+  .date-field{
+    background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.25);
+    border-radius:10px; padding:8px 14px; display:flex; flex-direction:column; gap:2px;
+  }
+  .date-field label{ font-size:0.65rem; text-transform:uppercase; letter-spacing:0.06em; color:#b9c8d8;}
+  .date-field input{
+    background:transparent; border:none; color:#fff; font-family:var(--mono);
+    font-size:0.95rem; outline:none; width:150px;
+  }
+  .date-field input::-webkit-calendar-picker-indicator{ filter:invert(1); cursor:pointer;}
+
+  /* STATS */
+  .stats{ display:flex; gap:14px; margin:18px 0; flex-wrap:wrap;}
+  .stat{
+    background:var(--panel); border:1px solid var(--line); border-radius:12px;
+    padding:14px 18px; flex:1; min-width:150px;
+  }
+  .stat .num{ font-family:var(--mono); font-size:1.6rem; font-weight:700; line-height:1;}
+  .stat .label{ font-size:0.75rem; color:var(--ink-soft); margin-top:6px;}
+  .stat.pend .num{ color:var(--amber);}
+  .stat.ok .num{ color:var(--green);}
+  .stat.total .num{ color:var(--navy);}
+  .stat.qtd .num{ color:var(--teal);}
+
+  /* TABS */
+  .tabs{ display:flex; gap:6px; margin:22px 0 14px; border-bottom:2px solid var(--line);}
+  .tab-btn{
+    background:none; border:none; padding:10px 18px; font-family:var(--sans);
+    font-size:0.9rem; font-weight:600; color:var(--ink-soft); cursor:pointer;
+    border-bottom:2px solid transparent; margin-bottom:-2px; transition: color .15s;
+  }
+  .tab-btn.active{ color:var(--navy); border-bottom-color:var(--navy);}
+  .tab-btn:hover{ color:var(--navy);}
+
+  .panel{ background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:20px; }
+  .view{ display:none; }
+  .view.active{ display:block; }
+
+  /* SEARCH */
+  .toolbar{ display:flex; gap:10px; margin-bottom:14px; flex-wrap:wrap; align-items:center;}
+  .search{
+    flex:1; min-width:220px; padding:9px 14px; border:1px solid var(--line);
+    border-radius:8px; font-family:var(--sans); font-size:0.9rem; outline:none;
+  }
+  .search:focus{ border-color:var(--navy);}
+  .filter-select{
+    padding:9px 12px; border:1px solid var(--line); border-radius:8px;
+    font-family:var(--sans); font-size:0.85rem; background:#fff; color:var(--ink);
+  }
+  .btn{
+    padding:9px 16px; border-radius:8px; border:1px solid var(--navy);
+    background:var(--navy); color:#fff; font-family:var(--sans); font-weight:600;
+    font-size:0.85rem; cursor:pointer; transition:.15s;
+  }
+  .btn:hover{ background:var(--navy-deep);}
+  .btn.ghost{ background:#fff; color:var(--navy);}
+  .btn.ghost:hover{ background:#f0f3f7;}
+  .btn.small{ padding:6px 12px; font-size:0.78rem;}
+  .btn.danger{ background:var(--red); border-color:var(--red);}
+  .btn.danger:hover{ background:#8f1e18;}
+
+  /* TABLE */
+  table{ width:100%; border-collapse:collapse; font-size:0.83rem;}
+  thead th{
+    text-align:left; padding:9px 10px; background:#f4f6f9; color:var(--ink-soft);
+    font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:700;
+    border-bottom:1px solid var(--line); position:sticky; top:0;
+  }
+  tbody td{ padding:9px 10px; border-bottom:1px solid #eef0f3; vertical-align:middle;}
+  tbody tr{ cursor:pointer; transition: background .1s;}
+  tbody tr:hover{ background:#f6f9fc;}
+  .table-wrap{ max-height:600px; overflow:auto; border:1px solid var(--line); border-radius:10px;}
+  .mono{ font-family:var(--mono); }
+  .item-code{ font-family:var(--mono); font-weight:700; color:var(--navy);}
+  .diff-chip{
+    display:inline-block; padding:2px 9px; border-radius:20px; font-family:var(--mono);
+    font-weight:700; font-size:0.78rem;
+  }
+  .diff-pos{ background:var(--green-bg); color:var(--green);}
+  .diff-neg{ background:var(--red-bg); color:var(--red);}
+  .status-badge{
+    display:inline-flex; align-items:center; gap:5px; padding:3px 10px; border-radius:20px;
+    font-size:0.72rem; font-weight:700;
+  }
+  .status-pendente{ background:var(--amber-bg); color:var(--amber);}
+  .status-parcial{ background:#e7edf7; color:var(--navy);}
+  .status-resolvido{ background:var(--green-bg); color:var(--green);}
+  .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; display:inline-block;}
+
+  /* DIVERGENCIAS VIEW */
+  .div-layout{ display:grid; grid-template-columns: 320px 1fr; gap:18px; align-items:start;}
+  @media (max-width: 860px){ .div-layout{ grid-template-columns: 1fr; } }
+  .item-list{ max-height:640px; overflow:auto; border:1px solid var(--line); border-radius:10px;}
+  .item-row{
+    padding:10px 12px; border-bottom:1px solid #eef0f3; cursor:pointer; transition:.1s;
+  }
+  .item-row:hover{ background:#f6f9fc;}
+  .item-row.selected{ background:#e7edf7; border-left:3px solid var(--navy);}
+  .item-row .r1{ display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;}
+  .item-row .code{ font-family:var(--mono); font-weight:700; font-size:0.85rem; color:var(--navy);}
+  .item-row .desc{ font-size:0.72rem; color:var(--ink-soft); line-height:1.3;}
+  .item-row .r2{ display:flex; justify-content:space-between; align-items:center; margin-top:5px;}
+
+  .detail-card{ border:1px solid var(--line); border-radius:12px; padding:18px;}
+  .detail-empty{ text-align:center; padding:60px 20px; color:var(--ink-soft);}
+  .detail-empty svg{ opacity:0.35; margin-bottom:12px;}
+  .item-title{ font-size:1.15rem; font-weight:700; color:var(--ink); margin:0 0 2px;}
+  .item-sub{ color:var(--ink-soft); font-size:0.85rem; margin:0 0 14px;}
+  .info-grid{
+    display:grid; grid-template-columns:repeat(auto-fit, minmax(110px,1fr)); gap:10px;
+    background:#f7f9fb; border-radius:10px; padding:12px 14px; margin-bottom:18px;
+  }
+  .info-grid div{ font-size:0.72rem; color:var(--ink-soft);}
+  .info-grid strong{ display:block; font-family:var(--mono); font-size:0.95rem; color:var(--ink); margin-top:2px;}
+
+  .progress-bar{ height:8px; border-radius:6px; background:#e4e9ef; overflow:hidden; margin:6px 0 2px;}
+  .progress-fill{ height:100%; border-radius:6px; background:var(--teal); transition:width .2s;}
+
+  form.entry-form{
+    display:grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)) auto; gap:10px; align-items:end;
+    background:#f7f9fb; border-radius:10px; padding:14px; margin-bottom:16px;
+  }
+  form.entry-form .full{ grid-column:1 / -1; }
+  form.entry-form label{ font-size:0.72rem; color:var(--ink-soft); font-weight:600; display:block; margin-bottom:4px;}
+  form.entry-form input, form.entry-form select, form.entry-form textarea{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px;
+    font-family:var(--sans); font-size:0.85rem; outline:none;
+  }
+  form.entry-form textarea{ resize:vertical; min-height:40px;}
+  form.entry-form input:focus, form.entry-form select:focus, form.entry-form textarea:focus{ border-color:var(--navy);}
+
+  .entries-list{ display:flex; flex-direction:column; gap:8px;}
+  .entry-item{
+    border:1px solid var(--line); border-radius:9px; padding:10px 12px;
+    display:flex; justify-content:space-between; align-items:flex-start; gap:10px;
+  }
+  .entry-main{ font-size:0.85rem; }
+  .entry-main b{ color:var(--navy);}
+  .entry-meta{ font-size:0.72rem; color:var(--ink-soft); margin-top:3px;}
+  .entry-obs{ font-size:0.78rem; color:var(--ink-soft); margin-top:4px; font-style:italic;}
+  .qty-badge{ font-family:var(--mono); font-weight:700; padding:2px 9px; border-radius:6px; background:#eef1f5;}
+  .no-entries{ text-align:center; color:var(--ink-soft); padding:24px; font-size:0.85rem;}
+
+  .toast{
+    position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+    background:var(--navy-deep); color:#fff; padding:10px 20px; border-radius:8px;
+    font-size:0.85rem; opacity:0; pointer-events:none; transition:.25s; z-index:50;
+  }
+  .toast.show{ opacity:1; transform:translateX(-50%) translateY(0);}
+
+  ::-webkit-scrollbar{ width:9px; height:9px;}
+  ::-webkit-scrollbar-thumb{ background:#c7ced6; border-radius:6px;}
+  ::-webkit-scrollbar-track{ background:transparent;}
+
+  .footer-note{ text-align:center; color:var(--ink-soft); font-size:0.75rem; margin-top:22px;}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <div class="hdr">
+    <div>
+      <h1>Controle de Divergências de Saldos</h1>
+      <p class="sub">MODERNA MOBILIA - Comparativo INDEFINIDO × GERENCIAL</p>
+    </div>
+    <div class="hdr-right">
+      <div class="date-field">
+        <label>Data da análise</label>
+        <input type="date" id="analysisDate">
+      </div>
+      <button class="btn ghost" id="exportBtn">Exportar relatório</button>
+      <button class="btn ghost" id="importBtn">Importar backup antigo</button>
+      <input type="file" id="importFile" accept="application/json" style="display:none;">
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat total"><div class="num" id="statTotal">–</div><div class="label">Itens com diferença</div></div>
+    <div class="stat ok"><div class="num" id="statResolvido">–</div><div class="label">Resolvidos</div></div>
+    <div class="stat pend"><div class="num" id="statPendente">–</div><div class="label">Pendentes</div></div>
+    <div class="stat qtd"><div class="num" id="statQtd">–</div><div class="label">Unidades em diferença</div></div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-view="saldos">Planilha de Saldos</button>
+    <button class="tab-btn" data-view="divergencias">Divergências Encontradas</button>
+  </div>
+
+  <!-- VIEW: SALDOS -->
+  <div class="view active" id="view-saldos">
+    <div class="panel">
+      <div class="toolbar">
+        <input type="text" class="search" id="searchSaldos" placeholder="Buscar por item ou descrição…">
+        <select class="filter-select" id="filterStatus">
+          <option value="">Todos os status</option>
+          <option value="pendente">Pendente</option>
+          <option value="parcial">Parcial</option>
+          <option value="resolvido">Resolvido</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Item</th>
+              <th>Descrição</th>
+              <th>Cor</th>
+              <th>Variação</th>
+              <th>Acabamento</th>
+              <th>Indefinido</th>
+              <th>Gerencial</th>
+              <th>Diferença</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="saldosBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW: DIVERGENCIAS -->
+  <div class="view" id="view-divergencias">
+    <div class="div-layout">
+      <div>
+        <div class="toolbar" style="margin-bottom:10px;">
+          <input type="text" class="search" id="searchItens" placeholder="Buscar item…">
+        </div>
+        <div class="item-list" id="itemList"></div>
+      </div>
+      <div class="detail-card" id="detailCard">
+        <div class="detail-empty">
+          <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <div>Selecione um item na lista ao lado<br>ou clique em uma linha na aba "Planilha de Saldos".</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <p class="footer-note">Os dados ficam salvos automaticamente neste arquivo — pode fechar e reabrir quando quiser continuar a análise.</p>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-database-compat.js"></script>
+<script>
+/* ============ DADOS BASE (aba DIFERENCAS) ============ */
+const RAW = {"header": ["ITEM", "DESCRICAO_ITEM", "COR", "DESCRICAO_COR", "VARIACAO", "DESCRICAO_VARIACAO", "ACABAMENTO", "DESCRICAO_ACABAMENTO", "SALDO_INDEFINIDO", "SALDO_GERENCIAL", "DIFERENCA"], "rows": [[1216, "GUARDA-ROUPA CASAL SAN MIGUEL 6 PORTAS E 6 GAVETAS - RUFATO", 4, "IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 10, 9, 1], [1372, "CONJUNTO 2 CAD BELLA - MOBILLARE", 10, "IMBUIA NATURAL", 47, "LINHO OFF", 0, "INDEFINIDO", 17, 12, 5], [2519, "GUARDA-ROUPA CASAL MAYA 6 PORTAS - RUFATO", 42, "IMBUIA/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 2, 5, -3], [2519, "GUARDA-ROUPA CASAL MAYA 6 PORTAS - RUFATO", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 10, 8, 2], [2521, "GUARDA-ROUPA SOLTEIRO HERA 4 PORTAS - RUFATO", 42, "IMBUIA/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 29, 30, -1], [2521, "GUARDA-ROUPA SOLTEIRO HERA 4 PORTAS - RUFATO", 418, "IMBUIA/GRAFITE/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 4, 3, 1], [2523, "GUARDA-ROUPA CASAL HERA 6 PORTAS - RUFATO", 42, "IMBUIA/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 52, 41, 11], [2524, "GUARDA-ROUPA CASAL HERA 8 PORTAS - RUFATO", 8, "IMBUIA/OFF WHITE/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 0, 1, -1], [2524, "GUARDA-ROUPA CASAL HERA 8 PORTAS - RUFATO", 42, "IMBUIA/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 759, 769, -10], [2524, "GUARDA-ROUPA CASAL HERA 8 PORTAS - RUFATO", 70, "IMBUIA/IMBUIA/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 363, 366, -3], [13028, "GUARDA-ROUPA BERLIM CLOSET PREMIUM RUFATO", 1, "BRANCO", 0, "INDEFINIDA", 0, "INDEFINIDO", 0, 2, -2], [13085, "GUARDA-ROUPA BERLIM CLOSET RUFATO", 1, "BRANCO", 0, "INDEFINIDA", 0, "INDEFINIDO", 1, 2, -1], [13555, "SALA DE JANTAR MILENA 180 TP MDF 6 CAD GRECIA RUFATO", 49, "OFF WHITE/IMBUIA/OFF WHITE", 19, "VELUDO CREME", 0, "INDEFINIDO", 7, 6, 1], [13790, "MESA PATROS 1800 X 900 TP MADEIRA VIDRO", 81, "IMB NAT/LAQ OFF", 0, "INDEFINIDA", 11, "CT COPO/SER OF WHITE", 10, 0, 10], [15524, "MESA ANE 2,20 (TP MAD C/ VD CP) - MOBILLARE", 175, "CIN IMBUIA/LAQ OFF", 0, "INDEFINIDA", 11, "CT COPO/SER OF WHITE", 3, 0, 3], [15825, "CONJUNTO C/ 2 CADEIRAS MUNIQUE", 10, "IMBUIA NATURAL", 15, "TURIM 07", 0, "INDEFINIDO", 2, 1, 1], [16791, "CONJUNTO C/ 2 CADEIRAS ESMERALDA", 10, "IMBUIA NATURAL", 186, "TURIM 07/STAR CARAMELO", 0, "INDEFINIDO", 12, 15, -3], [16960, "MESA MUNIQUE 1800 X 900 TP MDF VIDRO", 10, "IMBUIA NATURAL", 0, "INDEFINIDA", 11, "CT COPO/SER OF WHITE", 5, 0, 5], [18786, "ROUPEIRO CASAL FENIX 0 4 PORTAS - MODERNA MOBILIA", 8, "IMBUIA/OFF WHITE/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 0, 5, -5], [18786, "ROUPEIRO CASAL FENIX 0 4 PORTAS - MODERNA MOBILIA", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 2, 0, 2], [18793, "MESA OLIMPIA 120 (TP MDF CANTO RETO) - MODERNA MOBILIA", 46, "OFF WHITE/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 3, 4, -1], [19516, "MESA LUCY 120X90 TP C/ VD C/ 4 CADEIRAS SAFIRA - MODERNA", 48, "OFF WHITE/OFF WHITE/IMBUIA", 19, "VELUDO CREME", 2, "SERIG. OFF WHITE", 0, 2, -2], [19673, "MESA LIZ 180 TP MDF VIDRO/CANTO RETO", 46, "OFF WHITE/IMBUIA", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 49, 48, 1], [19681, "MESA LIZ 120 TP MDF VIDRO/CANTO RETO", 46, "OFF WHITE/IMBUIA", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 4, 2, 2], [21342, "VOL ROUPEIRO ESPANHA/SATURNO 8 PORTAS - LATERAL", 4, "IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 1, 0, 1], [21349, "VOL C/2 CADEIRAS GRECIA/ATHENAS - ASSENTO/ENCOSTO", 0, "INDEFINIDA", 234, "VELUDO GRAFITE", 0, "INDEFINIDO", 2, 0, 2], [21351, "VOL MESA 180 LUNA - TAMPO CANTO RETO", 6, "OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 0, 1, -1], [21353, "VOL C/2 CADEIRAS ATHENAS - CADEIRA", 4, "IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 2, 0, 2], [21355, "VOL MESA 180  - TAMPO C/VIDRO CANTO RETO", 6, "OFF WHITE", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 4, 16, -12], [21417, "MESA MILENA 180 TP MDF CANTO RETO C/ 6 CADEIRAS MILENA", 49, "OFF WHITE/IMBUIA/OFF WHITE", 19, "VELUDO CREME", 0, "INDEFINIDO", 91, 92, -1], [21622, "MOLDURA MAIOR MDF 1440 X 80 X 15 MM MESA 180 LONDRINA/LIZ RETO 1L", 495, "NATURALE", 0, "INDEFINIDA", 0, "INDEFINIDO", 0, 1, -1], [21764, "VOL MESA 160/180 ALVORADA - BASE", 5, "IMBUIA/IMBUIA/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 1, 0, 1], [21974, "MESA ALVORADA 180 TP MDF RT 6 CAD LONDRINA MM", 49, "OFF WHITE/IMBUIA/OFF WHITE", 19, "VELUDO CREME", 0, "INDEFINIDO", 3, 0, 3], [21974, "MESA ALVORADA 180 TP MDF RT 6 CAD LONDRINA MM", 49, "OFF WHITE/IMBUIA/OFF WHITE", 57, "LINHO RUSTICO", 0, "INDEFINIDO", 8, 6, 2], [21974, "MESA ALVORADA 180 TP MDF RT 6 CAD LONDRINA MM", 49, "OFF WHITE/IMBUIA/OFF WHITE", 253, "VEL CAPUCCINO", 0, "INDEFINIDO", 7, 9, -2], [23107, "MESA ASTER 180 TP MAD C/ VD RT 6 CAD LIZ MODERNA", 48, "OFF WHITE/OFF WHITE/IMBUIA", 19, "VELUDO CREME", 2, "SERIG. OFF WHITE", 164, 166, -2], [23107, "MESA ASTER 180 TP MAD C/ VD RT 6 CAD LIZ MODERNA", 414, "GRAFITE/GRAFITE/IMBUIA", 19, "VELUDO CREME", 19, "SERIG. GRAFITE", 13, 14, -1], [23107, "MESA ASTER 180 TP MAD C/ VD RT 6 CAD LIZ MODERNA", 48, "OFF WHITE/OFF WHITE/IMBUIA", 235, "LINHO GRAFITE", 2, "SERIG. OFF WHITE", 37, 36, 1], [23107, "MESA ASTER 180 TP MAD C/ VD RT 6 CAD LIZ MODERNA", 414, "GRAFITE/GRAFITE/IMBUIA", 235, "LINHO GRAFITE", 19, "SERIG. GRAFITE", 14, 19, -5], [23108, "MESA ASTER 180 TP 6 CAD LUNARA MM", 48, "OFF WHITE/OFF WHITE/IMBUIA", 15, "TURIM 07", 0, "INDEFINIDO", 5, 4, 1], [23631, "ROUPEIRO CLOSET LIGHT  MODERNA MOBILIA", 1, "BRANCO", 0, "INDEFINIDA", 0, "INDEFINIDO", 152, 151, 1], [23631, "ROUPEIRO CLOSET LIGHT  MODERNA MOBILIA", 4, "IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 97, 95, 2], [24864, "MESA ALVORADA 180 TP MDF VD/CT RETO 6 CAD MELISSA MODERNA", 49, "OFF WHITE/IMBUIA/OFF WHITE", 1, "ANIMALLE CHOC.", 2, "SERIG. OFF WHITE", 311, 373, -62], [24864, "MESA ALVORADA 180 TP MDF VD/CT RETO 6 CAD MELISSA MODERNA", 49, "OFF WHITE/IMBUIA/OFF WHITE", 17, "VELUDO MARROM", 2, "SERIG. OFF WHITE", 209, 216, -7], [24864, "MESA ALVORADA 180 TP MDF VD/CT RETO 6 CAD MELISSA MODERNA", 49, "OFF WHITE/IMBUIA/OFF WHITE", 19, "VELUDO CREME", 2, "SERIG. OFF WHITE", 219, 218, 1], [24864, "MESA ALVORADA 180 TP MDF VD/CT RETO 6 CAD MELISSA MODERNA", 49, "OFF WHITE/IMBUIA/OFF WHITE", 234, "VELUDO GRAFITE", 2, "SERIG. OFF WHITE", 210, 216, -6], [24865, "MESA ALVORADA 180 TP MDF VD/CT RT 4 CAD MELISSA MODERNA", 49, "OFF WHITE/IMBUIA/OFF WHITE", 1, "ANIMALLE CHOC.", 2, "SERIG. OFF WHITE", 32, 33, -1], [24880, "MULTIUSO HERA  MODERNA MOBILIA", 8, "IMBUIA/OFF WHITE/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 20, 17, 3], [25698, "ROUPEIRO SOLTEIRO HERA CLOSET 2 GAVETAS E 4 PRATELEIRAS - MM", 4, "IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 8, 6, 2], [26685, "KIT C/ 2 CADEIRAS ELLIS", 10, "IMBUIA NATURAL", 277, "FERRARA", 0, "INDEFINIDO", 0, 3, -3], [28386, "ROUPEIRO SOLTEIRO HEROS 4 PORTAS - MODERNA MOBILIA", 418, "IMBUIA/GRAFITE/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 0, 1, -1], [28387, "ROUPEIRO SOLTEIRO HEROS C/ PES 4 PORTAS - MODERNA MOBILIA", 70, "IMBUIA/IMBUIA/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 3, 2, 1], [28389, "ROUPEIRO CASAL HEROS 6 PORTAS - MODERNA MOBILIA", 418, "IMBUIA/GRAFITE/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 2, 3, -1], [28389, "ROUPEIRO CASAL HEROS 6 PORTAS - MODERNA MOBILIA", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 29, 11, 18], [28393, "ROUPEIRO CASAL HEROS C/ PES 6 PORTAS - MODERNA MOBILIA", 8, "IMBUIA/OFF WHITE/IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 41, 38, 3], [28917, "MESA OLIMPIA 120 TP MDF CANTO COPO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 15, "TURIM 07", 0, "INDEFINIDO", 279, 299, -20], [28917, "MESA OLIMPIA 120 TP MDF CANTO COPO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 17, "VELUDO MARROM", 0, "INDEFINIDO", 43, 42, 1], [28917, "MESA OLIMPIA 120 TP MDF CANTO COPO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 19, "VELUDO CREME", 0, "INDEFINIDO", 217, 222, -5], [28917, "MESA OLIMPIA 120 TP MDF CANTO COPO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 235, "LINHO GRAFITE", 0, "INDEFINIDO", 239, 238, 1], [28930, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 15, "TURIM 07", 2, "SERIG. OFF WHITE", 34, 36, -2], [28930, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 17, "VELUDO MARROM", 2, "SERIG. OFF WHITE", 6, 8, -2], [28930, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 19, "VELUDO CREME", 2, "SERIG. OFF WHITE", 16, 11, 5], [28930, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 235, "LINHO GRAFITE", 2, "SERIG. OFF WHITE", 37, 32, 5], [28930, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD CAROL MM", 487, "GRAFITE/IMB RIP", 235, "LINHO GRAFITE", 19, "SERIG. GRAFITE", 17, 16, 1], [28982, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD ATHENAS MM", 486, "OFF WHITE/IMB RIP", 15, "TURIM 07", 2, "SERIG. OFF WHITE", 4, 7, -3], [28982, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD ATHENAS MM", 486, "OFF WHITE/IMB RIP", 19, "VELUDO CREME", 2, "SERIG. OFF WHITE", 28, 29, -1], [28982, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD ATHENAS MM", 486, "OFF WHITE/IMB RIP", 235, "LINHO GRAFITE", 2, "SERIG. OFF WHITE", 22, 24, -2], [29029, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO COPO 4 CAD GRECIA MM", 486, "OFF WHITE/IMB RIP", 17, "VELUDO MARROM", 2, "SERIG. OFF WHITE", 7, 2, 5], [29194, "MESA OLIMPIA 120 TP MDF CANTO RETO 4 CAD ATHENAS MM", 486, "OFF WHITE/IMB RIP", 17, "VELUDO MARROM", 0, "INDEFINIDO", 19, 17, 2], [29194, "MESA OLIMPIA 120 TP MDF CANTO RETO 4 CAD ATHENAS MM", 46, "OFF WHITE/IMBUIA", 19, "VELUDO CREME", 0, "INDEFINIDO", 2, 0, 2], [29200, "MESA OLIMPIA 120 TP MDF VIDRO/CANTO RETO 4 CAD CAROL MM", 486, "OFF WHITE/IMB RIP", 17, "VELUDO MARROM", 2, "SERIG. OFF WHITE", 19, 18, 1], [29570, "VOL ROUPEIRO HAWAII 4 PORTAS - PUXADOR", 4, "IMBUIA", 0, "INDEFINIDA", 0, "INDEFINIDO", 1, 0, 1], [29713, "VOL MESA 180 LUNA - TAMPO CANTO COPO", 495, "NATURALE", 0, "INDEFINIDA", 0, "INDEFINIDO", 1, 0, 1], [31346, "MESA MILENA 180 (TP MDF VIDRO/CANTO RETO) - MM", 49, "OFF WHITE/IMBUIA/OFF WHITE", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 21, 22, -1], [31350, "MESA OLIMPIA 120 (TP MDF VIDRO/CANTO COPO) - MM", 46, "OFF WHITE/IMBUIA", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 4, 5, -1], [31354, "MESA AIDA 120 (TP MDF VIDRO/CANTO RETO) - MM", 486, "OFF WHITE/IMB RIP", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 46, 44, 2], [31454, "VOL MESA 180  - TAMPO C/VIDRO CANTO COPO LONDRINA", 6, "OFF WHITE", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 3, 2, 1], [31642, "MESA LARA 180 TP MDF VIDRO/CT COPO MM", 49, "OFF WHITE/IMBUIA/OFF WHITE", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 2, 0, 2], [31642, "MESA LARA 180 TP MDF VIDRO/CT COPO MM", 522, "GRAFITE/IMBUIA/IMBUIA", 0, "INDEFINIDA", 19, "SERIG. GRAFITE", 19, 20, -1], [31696, "MESA LUCY 120 TP MDF VD/CT COPO MM", 48, "OFF WHITE/OFF WHITE/IMBUIA", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 0, 1, -1], [31761, "MESA LIZ 120 TP MDF VIDRO/CT COPO MM", 46, "OFF WHITE/IMBUIA", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 5, 4, 1], [31761, "MESA LIZ 120 TP MDF VIDRO/CT COPO MM", 415, "GRAFITE/IMBUIA", 0, "INDEFINIDA", 19, "SERIG. GRAFITE", 5, 4, 1], [32375, "MESA LIZ 120 TP MDF CANTO RETO 4 CAD ATHENAS MODERNA MOBILIA", 46, "OFF WHITE/IMBUIA", 19, "VELUDO CREME", 0, "INDEFINIDO", 6, 5, 1], [32403, "MESA LIZ 120 TP MDF CANTO COPO 4 CAD ATHENAS MODERNA MOBILIA", 46, "OFF WHITE/IMBUIA", 15, "TURIM 07", 0, "INDEFINIDO", 8, 7, 1], [32405, "MESA LIZ 120 TP MDF VIDRO/CANTO RETO 4 CAD ATHENAS MODERNA MOBILIA", 46, "OFF WHITE/IMBUIA", 253, "VEL CAPUCCINO", 2, "SERIG. OFF WHITE", 22, 20, 2], [32437, "GUARDA-ROUPA CASAL HERA PREMIUM 8 PORTAS E 4 GAVETAS - MODERNA", 496, "NATUR/NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 1, 0, 1], [32437, "GUARDA-ROUPA CASAL HERA PREMIUM 8 PORTAS E 4 GAVETAS - MODERNA", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 20, 22, -2], [32440, "GUARDA-ROUPA CASAL DUNAS 8 PORTAS E 4 GAVETAS - MODERNA", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 16, 17, -1], [32487, "GUARDA-ROUPA ROMA 6 PORTAS MODERNA", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 43, 41, 2], [32699, "ROUPEIRO SOLTEIRO DUNAS 4 PORTAS - MODERNA MOBILIA", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 38, 42, -4], [32894, "GUARDA-ROUPA CASAL MARROCOS 8 PORTAS E 4 GAVETAS - MODERNA", 496, "NATUR/NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 11, 12, -1], [32899, "GUARDA-ROUPA CASAL TORONTO 8 PORTAS E 4 GAVETAS - MODERNA", 496, "NATUR/NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 536, 543, -7], [33983, "MESA AIDA 90 TP MDF VIDRO/CANTO COPO C/ 4 CADEIRAS ATHENAS MM", 486, "OFF WHITE/IMB RIP", 15, "TURIM 07", 2, "SERIG. OFF WHITE", 18, 27, -9], [33983, "MESA AIDA 90 TP MDF VIDRO/CANTO COPO C/ 4 CADEIRAS ATHENAS MM", 514, "OFF WHITE/IMBUIA/IMB RIP", 15, "TURIM 07", 2, "SERIG. OFF WHITE", 9, 0, 9], [35186, "MESA NORONHA 2200 X 1100 TP MADEIRA MODERNA MOBILIA", 544, "CIN IMBUIA/CIN IMBUIA", 0, "INDEFINIDA", 22, "BARRIL", 0, 1, -1], [35371, "KIT C/ 2 CADEIRAS MALTA", 10, "IMBUIA NATURAL", 274, "BOUCLE 01", 0, "INDEFINIDO", 1, 0, 1], [36065, "MESA MALTA 1600 X 900 TP MAD VD", 440, "IMB/LAQ OFF", 0, "INDEFINIDA", 21, "CT MOEDA/SER OF WHITE", 2, 0, 2], [36317, "KIT 2 CAD BALLARE", 10, "IMBUIA NATURAL", 274, "BOUCLE 01", 0, "INDEFINIDO", 17, 15, 2], [36565, "MESA MALTA 1200 X 800 TP MADEIRA VIDRO/CANTO MOEDA MM", 440, "IMB/LAQ OFF", 0, "INDEFINIDA", 21, "CT MOEDA/SER OF WHITE", 0, 1, -1], [37594, "GUARDA-ROUPA CASAL COLISEU 6 PORTAS - MODERNA", 65, "NATURALE/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 3, 11, -8], [37594, "GUARDA-ROUPA CASAL COLISEU 6 PORTAS - MODERNA", 508, "NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 13, 11, 2], [37597, "GUARDA-ROUPA CASAL CONNOR 3 PORTAS - MODERNA", 65, "NATURALE/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 14, 12, 2], [37597, "GUARDA-ROUPA CASAL CONNOR 3 PORTAS - MODERNA", 508, "NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 18, 20, -2], [37662, "GUARDA-ROUPA CASAL MATTEO 6 PORTAS - MODERNA", 583, "NATURALE/NATURALE/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 0, 11, -11], [37909, "ROUPEIRO INFANTIL SONHO 4 PORTAS - MODERNA", 609, "BRANCO/BRANCO/NATURALLE", 0, "INDEFINIDA", 0, "INDEFINIDO", 56, 28, 28], [38676, "MESA ISADORA 180 TP MDF VIDRO/CANTO COPO MODERNA MOBILIA", 576, "OFF WHITE/OFF WHITE/NATURALE", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 5, 4, 1], [38690, "MESA COPPER 180 TP MDF VIDRO/CANTO COPO MODERNA MOBILIA", 598, "OFF/OFF/CAPUCCINO", 0, "INDEFINIDA", 2, "SERIG. OFF WHITE", 2, 1, 1], [39049, "MESA CAROLINA 180 TP MDF CANTO COPO MM", 617, "NATURALLE/NATURALLE/PALHA", 0, "INDEFINIDA", 0, "INDEFINIDO", 16, 14, 2], [39233, "MESA CAROL 180 TP MDF VIDRO/CANTO COPO 6 CAD SAFIRA LUXO MM", 49, "OFF WHITE/IMBUIA/OFF WHITE", 15, "TURIM 07", 2, "SERIG. OFF WHITE", 5, 6, -1], [39279, "ENCOSTO ESTOFADO 600 X 435 X 98 MM  (LONDRINA) (NOVO) - MODERNA", 0, "INDEFINIDA", 17, "VELUDO MARROM", 0, "INDEFINIDO", 0, 1, -1], [39403, "MESA CAROLINA 180 TP MDF CANTO COPO 6 CAD COPPER PREMIUM MODERNA MOBIL", 617, "NATURALLE/NATURALLE/PALHA", 19, "VELUDO CREME", 0, "INDEFINIDO", 47, 48, -1], [39945, "MESA LIZ 120 TP MDF CANTO COPO", 508, "NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 31, 26, 5], [39946, "MESA LIZ 180 TP MDF CANTO COPO", 508, "NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 162, 164, -2], [40115, "ROUPEIRO TORONTO 6 PORTAS C/ PES MODERNA MOBILIA", 496, "NATUR/NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 80, 76, 4], [40640, "MESA OLIMPIA 90 TP MDF VIDRO/CANTO COPO C/ 4 CADEIRAS CAROL", 486, "OFF WHITE/IMB RIP", 15, "TURIM 07", 2, "SERIG. OFF WHITE", 12, 5, 7], [40640, "MESA OLIMPIA 90 TP MDF VIDRO/CANTO COPO C/ 4 CADEIRAS CAROL", 486, "OFF WHITE/IMB RIP", 19, "VELUDO CREME", 2, "SERIG. OFF WHITE", 7, 6, 1], [40695, "ROUPEIRO TORONTO 8 PORTAS E 4 GAVETAS C/ PES", 496, "NATUR/NATUR/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 20, 21, -1], [40706, "GUARDA-ROUPA ROMA 6 PORTAS C/2 GAVETAS C/ PES MOD", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 1, 0, 1], [40779, "ROUPEIRO ATACAMA 8 PORTAS", 65, "NATURALE/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 1, 0, 1], [41860, "ROUPEIRO EVEREST 10 PORTAS C/4 GAVETAS", 65, "NATURALE/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 11, 12, -1], [41961, "ROUPEIRO EVEREST 10 PORTAS C/12 GAVETAS", 65, "NATURALE/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 78, 79, -1], [41995, "ROUPEIRO CONNOR 3 PORTAS DE CORRER C/4 GAVETAS C/ PES E C/ ESPELHO", 65, "NATURALE/OFF WHITE", 0, "INDEFINIDA", 0, "INDEFINIDO", 0, 8, -8], [42147, "CONJUNTO C/ 6 CADEIRAS COPPER", 495, "NATURALE", 253, "VEL CAPUCCINO", 0, "INDEFINIDO", 0, 1, -1], [42495, "ROUPEIRO QUIOTO 6 PORTAS", 497, "NATUR/OFF WHITE/NATUR", 0, "INDEFINIDA", 0, "INDEFINIDO", 9, 10, -1]]};
+
+const rows = RAW.rows.map((r, idx) => ({
+  idx,
+  item: r[0], descricaoItem: r[1],
+  cor: r[2], descricaoCor: r[3],
+  variacao: r[4], descricaoVariacao: r[5],
+  acabamento: r[6], descricaoAcabamento: r[7],
+  saldoIndefinido: r[8], saldoGerencial: r[9], diferenca: r[10]
+}));
+
+/* ============ FIREBASE (Realtime Database) ============ */
+const firebaseConfig = {
+  apiKey: "AIzaSyBj9JskW4G50_ziM1NLh3EX0EnoEluJx3A",
+  authDomain: "familia-volei.firebaseapp.com",
+  databaseURL: "https://familia-volei-default-rtdb.firebaseio.com",
+  projectId: "familia-volei",
+  storageBucket: "familia-volei.firebasestorage.app",
+  messagingSenderId: "250165693676",
+  appId: "1:250165693676:web:3ada372301612d336329c9"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+// Namespace próprio, isolado do resto do banco (ex: dados do app de vôlei) — nada é lido/escrito fora daqui.
+const rootRef = db.ref('controle_divergencias');
+
+let entriesCache = {}; // idx -> array of lançamentos
+let analysisDate = '';
+let firebaseConnected = false;
+
+async function saveEntries(idx, entries){
+  entriesCache[idx] = entries;
+  try{
+    await rootRef.child('entries/' + idx).set(entries);
+  }catch(e){
+    console.error('Erro ao salvar no Firebase', e);
+    showToast('Não foi possível salvar — verifique sua conexão ou as regras do Firebase.');
+  }
+}
+
+async function saveAnalysisDate(date){
+  analysisDate = date;
+  try{
+    await rootRef.child('analysisDate').set(date);
+  }catch(e){
+    console.error('Erro ao salvar data', e);
+  }
+}
+
+function refreshDetailIfSafe(){
+  if(selectedIdx === null) return;
+  const active = document.activeElement;
+  const formFocused = active && active.closest && active.closest('#entryForm');
+  if(formFocused) return; // não interrompe quem está digitando um lançamento
+  const detailView = document.getElementById('view-divergencias');
+  if(detailView && detailView.classList.contains('active')){
+    renderDetail(selectedIdx);
+  }
+}
+
+function attachRealtimeSync(){
+  rootRef.on('value', (snapshot)=>{
+    const data = snapshot.val() || {};
+    analysisDate = data.analysisDate || '';
+    entriesCache = data.entries || {};
+    document.getElementById('analysisDate').value = analysisDate;
+    firebaseConnected = true;
+    const note = document.getElementById('storageModeNote');
+    if(note) note.textContent = '🔗 Conectado ao Firebase — dados compartilhados em tempo real com quem mais tiver este link.';
+    renderSaldos();
+    renderItemList();
+    refreshDetailIfSafe();
+  }, (error)=>{
+    console.error('Erro de conexão com Firebase', error);
+    const note = document.getElementById('storageModeNote');
+    if(note) note.textContent = '⚠️ Não foi possível conectar ao Firebase — confira as regras de segurança do Realtime Database.';
+    showToast('Erro ao conectar ao Firebase.');
+  });
+}
+
+
+
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=> t.classList.remove('show'), 2200);
+}
+
+/* ============ STATUS LOGIC ============ */
+function rowStatus(row){
+  const entries = entriesCache[row.idx] || [];
+  if(entries.length === 0) return 'pendente';
+  const sum = entries.reduce((a,e)=> a + Number(e.quantidade || 0), 0);
+  if(row.diferenca === 0) return sum === 0 ? 'pendente' : 'resolvido';
+  const pct = Math.abs(sum / row.diferenca);
+  return pct >= 1 ? 'resolvido' : 'parcial';
+}
+function statusLabel(s){
+  return s === 'resolvido' ? 'Resolvido' : s === 'parcial' ? 'Parcial' : 'Pendente';
+}
+
+/* ============ RENDER: SALDOS TABLE ============ */
+function renderSaldos(){
+  const q = document.getElementById('searchSaldos').value.trim().toLowerCase();
+  const filterStatus = document.getElementById('filterStatus').value;
+  const tbody = document.getElementById('saldosBody');
+  tbody.innerHTML = '';
+
+  let visible = rows.filter(r=>{
+    const matchQ = !q || String(r.item).includes(q) || r.descricaoItem.toLowerCase().includes(q);
+    const st = rowStatus(r);
+    const matchS = !filterStatus || st === filterStatus;
+    return matchQ && matchS;
+  }).sort((a,b)=> Math.abs(b.diferenca) - Math.abs(a.diferenca));
+
+  for(const r of visible){
+    const st = rowStatus(r);
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td class="item-code">${r.item}</td>
+      <td>${r.descricaoItem}</td>
+      <td><span class="mono" style="color:var(--ink-soft);font-size:0.75rem;">${r.cor}</span> ${r.descricaoCor}</td>
+      <td><span class="mono" style="color:var(--ink-soft);font-size:0.75rem;">${r.variacao}</span> ${r.descricaoVariacao}</td>
+      <td><span class="mono" style="color:var(--ink-soft);font-size:0.75rem;">${r.acabamento}</span> ${r.descricaoAcabamento}</td>
+      <td class="mono">${r.saldoIndefinido}</td>
+      <td class="mono">${r.saldoGerencial}</td>
+      <td><span class="diff-chip ${r.diferenca>=0?'diff-pos':'diff-neg'}">${r.diferenca>0?'+':''}${r.diferenca}</span></td>
+      <td><span class="status-badge status-${st}"><span class="dot"></span>${statusLabel(st)}</span></td>
+    `;
+    tr.addEventListener('click', ()=> goToItem(r.idx));
+    tbody.appendChild(tr);
+  }
+
+  updateStats();
+}
+
+function updateStats(){
+  let resolvido=0, pendente=0, parcial=0, qtdTotal=0;
+  for(const r of rows){
+    qtdTotal += Math.abs(r.diferenca);
+    const st = rowStatus(r);
+    if(st==='resolvido') resolvido++;
+    else if(st==='parcial') parcial++;
+    else pendente++;
+  }
+  document.getElementById('statTotal').textContent = rows.length;
+  document.getElementById('statResolvido').textContent = resolvido;
+  document.getElementById('statPendente').textContent = pendente + parcial;
+  document.getElementById('statQtd').textContent = qtdTotal;
+}
+
+/* ============ RENDER: ITEM LIST (Divergencias tab) ============ */
+let selectedIdx = null;
+
+function renderItemList(){
+  const q = document.getElementById('searchItens').value.trim().toLowerCase();
+  const list = document.getElementById('itemList');
+  list.innerHTML = '';
+  const visible = rows
+    .filter(r=> !q || String(r.item).includes(q) || r.descricaoItem.toLowerCase().includes(q))
+    .slice()
+    .sort((a,b)=> Math.abs(b.diferenca) - Math.abs(a.diferenca));
+
+  for(const r of visible){
+    const st = rowStatus(r);
+    const div = document.createElement('div');
+    div.className = 'item-row' + (r.idx === selectedIdx ? ' selected' : '');
+    div.innerHTML = `
+      <div class="r1">
+        <span class="code">${r.item}</span>
+        <span class="diff-chip ${r.diferenca>=0?'diff-pos':'diff-neg'}">${r.diferenca>0?'+':''}${r.diferenca}</span>
+      </div>
+      <div class="desc">${r.descricaoItem}</div>
+      <div class="r2">
+        <span style="font-size:0.7rem;color:var(--ink-soft)">${r.cor} ${r.descricaoCor}${r.descricaoVariacao && r.descricaoVariacao!=='INDEFINIDA' ? ' · '+r.variacao+' '+r.descricaoVariacao : ''}</span>
+        <span class="status-badge status-${st}" style="font-size:0.65rem;padding:2px 8px;"><span class="dot"></span>${statusLabel(st)}</span>
+      </div>
+    `;
+    div.addEventListener('click', ()=> selectItem(r.idx));
+    list.appendChild(div);
+  }
+}
+
+function goToItem(idx){
+  document.querySelector('.tab-btn[data-view="divergencias"]').click();
+  selectItem(idx);
+}
+
+function selectItem(idx){
+  selectedIdx = idx;
+  renderItemList();
+  renderDetail(idx);
+  // scroll list item into view
+  const list = document.getElementById('itemList');
+  const sel = list.querySelector('.item-row.selected');
+  if(sel) sel.scrollIntoView({block:'nearest'});
+}
+
+/* ============ RENDER: DETAIL PANEL ============ */
+function renderDetail(idx){
+  const r = rows.find(x=> x.idx === idx);
+  const card = document.getElementById('detailCard');
+  const entries = entriesCache[idx] || [];
+  const sum = entries.reduce((a,e)=> a + Number(e.quantidade||0), 0);
+  const pct = r.diferenca !== 0 ? Math.min(100, Math.abs(sum / r.diferenca) * 100) : 0;
+  const st = rowStatus(r);
+
+  card.innerHTML = `
+    <p class="item-title">Item ${r.item} <span style="color:var(--ink-soft); font-weight:500; font-size:0.9rem;">— ${r.descricaoItem}</span></p>
+    <p class="item-sub">Cor: <b>${r.cor} — ${r.descricaoCor}</b> &nbsp;·&nbsp; Variação: <b>${r.variacao} — ${r.descricaoVariacao}</b> &nbsp;·&nbsp; Acabamento: <b>${r.acabamento} — ${r.descricaoAcabamento}</b></p>
+
+
+    <div class="info-grid">
+      <div>Saldo indefinido<strong>${r.saldoIndefinido}</strong></div>
+      <div>Saldo gerencial<strong>${r.saldoGerencial}</strong></div>
+      <div>Diferença total<strong style="color:${r.diferenca>=0?'var(--green)':'var(--red)'}">${r.diferenca>0?'+':''}${r.diferenca}</strong></div>
+      <div>Já apurado<strong style="color:var(--teal)">${sum>0?'+':''}${sum}</strong></div>
+    </div>
+
+    <div style="margin-bottom:18px;">
+      <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--ink-soft); margin-bottom:2px;">
+        <span>Apuração da diferença</span>
+        <span>${pct.toFixed(0)}%</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pct,100)}%; background:${st==='resolvido'?'var(--green)':'var(--teal)'}"></div></div>
+    </div>
+
+    <h3 style="font-size:0.95rem; margin:0 0 10px;">Registrar divergência encontrada</h3>
+    <form class="entry-form" id="entryForm">
+      <div>
+        <label>Tipo de lançamento</label>
+        <select id="fTipo">
+          <option value="">Selecione…</option>
+          <option>RST - Requisição de Transferência</option>
+          <option>NFE - Entrada de NFe / Retorno (285)</option>
+          <option>COM - Entrada de NFe (1)</option>
+          <option>NFe - Nota Fiscal</option>
+          <option>RSE - Requisição de Entrada</option>
+          <option>Outro</option>
+        </select>
+      </div>
+      <div>
+        <label>Qualificação</label>
+        <select id="fQualif" required>
+          <option value="">Selecione…</option>
+          <option value="Indefinido">Indefinido</option>
+          <option value="Gerencial">Gerencial</option>
+        </select>
+      </div>
+      <div>
+        <label>Data</label>
+        <input type="date" id="fData">
+      </div>
+      <div>
+        <label>Código do registro</label>
+        <input type="text" id="fCodigo" placeholder="nº requisição/NF…">
+      </div>
+      <div>
+        <label>Quantidade</label>
+        <input type="number" id="fQtd" placeholder="ex: -5">
+      </div>
+      <div>
+        <button type="submit" class="btn small">Adicionar</button>
+      </div>
+      <div class="full">
+        <label>Observação (opcional)</label>
+        <textarea id="fObs" placeholder="Detalhes do que foi encontrado no sistema…"></textarea>
+      </div>
+    </form>
+
+    <h3 style="font-size:0.95rem; margin:18px 0 10px;">Divergências registradas (${entries.length})</h3>
+    <div class="entries-list" id="entriesList"></div>
+  `;
+
+  renderEntries(idx);
+
+  document.getElementById('entryForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    const tipo = document.getElementById('fTipo').value;
+    const qualif = document.getElementById('fQualif').value.trim();
+    const data = document.getElementById('fData').value;
+    const codigo = document.getElementById('fCodigo').value.trim();
+    const qtd = document.getElementById('fQtd').value;
+    const obs = document.getElementById('fObs').value.trim();
+    if(!tipo || !qualif || qtd === ''){ showToast('Preencha tipo de lançamento, qualificação e quantidade.'); return; }
+    const list = entriesCache[idx] ? [...entriesCache[idx]] : [];
+    list.push({ tipo, qualif, data, codigo, quantidade: Number(qtd), obs, ts: new Date().toISOString() });
+    await saveEntries(idx, list);
+    renderDetail(idx);
+    renderSaldos();
+    renderItemList();
+    showToast('Divergência registrada.');
+  });
+}
+
+function renderEntries(idx){
+  const entries = entriesCache[idx] || [];
+  const list = document.getElementById('entriesList');
+  if(entries.length === 0){
+    list.innerHTML = '<div class="no-entries">Nenhuma divergência registrada ainda para este item.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  entries.forEach((e, i)=>{
+    const d = new Date(e.ts);
+    const dateStr = isNaN(d) ? '' : d.toLocaleDateString('pt-BR');
+    const dataInfo = e.data ? e.data.split('-').reverse().join('/') : '';
+    const div = document.createElement('div');
+    div.className = 'entry-item';
+    div.innerHTML = `
+      <div>
+        <div class="entry-main"><b>${e.tipo}</b>${e.qualif ? ' · ' + e.qualif : ''}${e.codigo ? ' · Cód: ' + e.codigo : ''}</div>
+        ${e.obs ? `<div class="entry-obs">${e.obs}</div>` : ''}
+        <div class="entry-meta">${dataInfo ? 'Data: ' + dataInfo + ' · ' : ''}Lançado em ${dateStr}</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:10px;">
+        <span class="qty-badge" style="color:${e.quantidade>=0?'var(--green)':'var(--red)'}">${e.quantidade>0?'+':''}${e.quantidade}</span>
+        <button class="btn danger small" data-i="${i}">Excluir</button>
+      </div>
+    `;
+    div.querySelector('button').addEventListener('click', async ()=>{
+      const list2 = [...entriesCache[idx]];
+      list2.splice(i,1);
+      await saveEntries(idx, list2);
+      renderDetail(idx);
+      renderSaldos();
+      renderItemList();
+    });
+    list.appendChild(div);
+  });
+}
+
+/* ============ TABS ============ */
+document.querySelectorAll('.tab-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab-btn').forEach(b=> b.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(v=> v.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('view-' + btn.dataset.view).classList.add('active');
+    if(btn.dataset.view === 'divergencias') renderItemList();
+  });
+});
+
+/* ============ SEARCH / FILTER LISTENERS ============ */
+document.getElementById('searchSaldos').addEventListener('input', renderSaldos);
+document.getElementById('filterStatus').addEventListener('change', renderSaldos);
+document.getElementById('searchItens').addEventListener('input', renderItemList);
+
+/* ============ DATE FIELD ============ */
+document.getElementById('analysisDate').addEventListener('change', async (e)=>{
+  await saveAnalysisDate(e.target.value);
+  showToast('Data de análise salva.');
+});
+
+/* ============ EXPORT REPORT ============ */
+document.getElementById('exportBtn').addEventListener('click', ()=>{
+  let lines = [];
+  lines.push('RELATÓRIO DE DIVERGÊNCIAS DE SALDOS');
+  lines.push('Data da análise: ' + (analysisDate || '(não informada)'));
+  lines.push('Gerado em: ' + new Date().toLocaleString('pt-BR'));
+  lines.push('');
+  let any = false;
+  for(const r of rows){
+    const entries = entriesCache[r.idx] || [];
+    if(entries.length === 0) continue;
+    any = true;
+    lines.push('----------------------------------------');
+    lines.push(`Item ${r.item} — ${r.descricaoItem}`);
+    lines.push(`Cor: ${r.cor} - ${r.descricaoCor} | Variação: ${r.variacao} - ${r.descricaoVariacao} | Acabamento: ${r.acabamento} - ${r.descricaoAcabamento}`);
+    lines.push(`Saldo indefinido: ${r.saldoIndefinido} | Saldo gerencial: ${r.saldoGerencial} | Diferença: ${r.diferenca}`);
+    const sum = entries.reduce((a,e)=> a + Number(e.quantidade||0),0);
+    lines.push(`Status: ${statusLabel(rowStatus(r))} (apurado: ${sum} de ${r.diferenca})`);
+    lines.push('Divergências encontradas:');
+    entries.forEach(e=>{
+      const d = new Date(e.ts);
+      const dateStr = isNaN(d) ? '' : d.toLocaleDateString('pt-BR');
+      lines.push(`  - [${dateStr}] ${e.tipo} | Qualificação: ${e.qualif || '-'} | Data: ${e.data ? e.data.split('-').reverse().join('/') : '-'} | Código: ${e.codigo || '-'} | Qtd: ${e.quantidade}${e.obs ? ' | Obs: ' + e.obs : ''}`);
+    });
+    lines.push('');
+  }
+  if(!any){ showToast('Ainda não há divergências registradas para exportar.'); return; }
+
+  const blob = new Blob([lines.join('\n')], {type:'text/plain;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'relatorio_divergencias_' + (analysisDate || 'sem_data') + '.txt';
+  a.click();
+  URL.revokeObjectURL(url);
+});
+
+/* ============ IMPORT BACKUP (dados antigos do localStorage) ============ */
+document.getElementById('importBtn').addEventListener('click', ()=>{
+  document.getElementById('importFile').click();
+});
+document.getElementById('importFile').addEventListener('change', async (e)=>{
+  const file = e.target.files[0];
+  if(!file) return;
+  try{
+    const text = await file.text();
+    const data = JSON.parse(text);
+    let count = 0;
+    for(const key of Object.keys(data)){
+      const m = key.match(/^divergencia:row:(\d+)$/);
+      if(m){
+        const idx = Number(m[1]);
+        const entries = data[key];
+        if(Array.isArray(entries) && entries.length){
+          await saveEntries(idx, entries);
+          count++;
+        }
+      }
+    }
+    if(data['analise:data']){
+      await saveAnalysisDate(data['analise:data']);
+    }
+    showToast(`Backup importado: ${count} ite${count===1?'m':'ns'} com divergências enviados ao Firebase.`);
+  }catch(err){
+    console.error('Erro ao importar backup', err);
+    showToast('Arquivo de backup inválido.');
+  }
+  e.target.value = '';
+});
+
+
+(function init(){
+  const note = document.getElementById('storageModeNote');
+  if(note) note.textContent = '⏳ Conectando ao Firebase…';
+  renderSaldos();
+  renderItemList();
+  attachRealtimeSync();
+})();
+</script>
+</body>
+</html>
