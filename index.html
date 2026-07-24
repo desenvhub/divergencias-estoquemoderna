@@ -526,7 +526,12 @@ function calcDetalhado(idx){
   }
   let indef = Number(d.saldoBase);
   let ger = Number(d.saldoBase);
-  const movs = (d.movimentos || []).slice()
+  // A linha do tempo combina os lançamentos já registrados na lista de divergências
+  // (usando a qualificação escolhida em cada um) com os "saldos conhecidos" opcionais
+  // informados diretamente numa data (checkpoints).
+  const lancamentos = (entriesCache[idx] || []).slice();
+  const checkpoints = (d.movimentos || []).filter(m=> m.kind === 'checkpoint');
+  const movs = lancamentos.concat(checkpoints)
     .sort((a,b)=> (a.data||'').localeCompare(b.data||'') || (a.ts||'').localeCompare(b.ts||''));
   const timeline = movs.map(m=>{
     if(m.kind === 'checkpoint'){
@@ -971,24 +976,20 @@ function renderDetalhadoBody(wrap, idx, r, d){
     `;
   }
 
-  const movForm = hasBase ? `
-      <div class="seg-tabs">
-        <button type="button" id="tabMov" class="active">+ Lançar movimentação</button>
-        <button type="button" id="tabSaldo">📌 Informar saldo conhecido na data</button>
-      </div>
-      <div id="movFormWrap">${movFormHtml()}</div>
-      <div id="saldoFormWrap" style="display:none;">${saldoFormHtml()}</div>
-  ` : '';
-
   wrap.innerHTML = `
     <h3 style="font-size:0.95rem; margin:0 0 10px;">1. Data e saldo em que indefinido e gerencial eram iguais</h3>
     <div id="baseFormWrap">${hasBase ? baseInfoHtml : baseFormHtml}</div>
 
     ${hasBase ? `
       ${balanceSummaryHtml}
-      <h3 style="font-size:0.95rem; margin:18px 0 10px;">2. Registrar movimentações que geraram divergência</h3>
-      ${movForm}
-      <h3 style="font-size:0.95rem; margin:18px 0 10px;">Linha do tempo (${calc ? calc.timeline.length : 0})</h3>
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:18px 0 4px;">
+        <h3 style="font-size:0.95rem; margin:0;">Linha do tempo calculada (${calc ? calc.timeline.length : 0})</h3>
+        <button type="button" id="toggleSaldoBtn" class="btn ghost small">📌 Informar saldo conhecido numa data</button>
+      </div>
+      <p style="color:var(--ink-soft); font-size:0.78rem; margin:0 0 10px;">
+        Cada divergência registrada na lista acima já entra automaticamente neste cálculo, usando a qualificação (indefinido/gerencial/as duas) escolhida nela. Use o botão acima só se, em algum momento, você já souber o saldo real de cada uma numa data — sem precisar lançar entrada por entrada até lá.
+      </p>
+      <div id="saldoFormWrap" style="display:none; margin-bottom:14px;">${saldoFormHtml()}</div>
       <div id="timelineWrap"></div>
     ` : `<p style="color:var(--ink-soft); font-size:0.82rem;">Informe a data e o saldo em que os dois estoques ainda estavam corretos para começar.</p>`}
   `;
@@ -1031,40 +1032,13 @@ function renderDetalhadoBody(wrap, idx, r, d){
   if(hasBase){
     renderTimeline(idx);
 
-    const tabMov = document.getElementById('tabMov');
-    const tabSaldo = document.getElementById('tabSaldo');
-    const movFormWrap = document.getElementById('movFormWrap');
+    const toggleSaldoBtn = document.getElementById('toggleSaldoBtn');
     const saldoFormWrap = document.getElementById('saldoFormWrap');
-    if(tabMov && tabSaldo){
-      tabMov.addEventListener('click', ()=>{
-        tabMov.classList.add('active'); tabSaldo.classList.remove('active');
-        movFormWrap.style.display = 'block'; saldoFormWrap.style.display = 'none';
-      });
-      tabSaldo.addEventListener('click', ()=>{
-        tabSaldo.classList.add('active'); tabMov.classList.remove('active');
-        saldoFormWrap.style.display = 'block'; movFormWrap.style.display = 'none';
-      });
-    }
-
-    const movForm2 = document.getElementById('movForm');
-    if(movForm2){
-      movForm2.addEventListener('submit', async (e)=>{
-        e.preventDefault();
-        const tipo = document.getElementById('mTipo').value;
-        const qualif = document.getElementById('mQualif').value;
-        const data = document.getElementById('mData').value;
-        const codigo = document.getElementById('mCodigo').value.trim();
-        const qtd = document.getElementById('mQtd').value;
-        const obs = document.getElementById('mObs').value.trim();
-        if(!qualif || !data || qtd === ''){ showToast('Preencha qualificação, data e quantidade.'); return; }
-        const cur = getDetalhado(idx);
-        const movimentos = cur.movimentos ? [...cur.movimentos] : [];
-        movimentos.push({ kind:'movimento', tipo, qualif, data, codigo, quantidade: Number(qtd), obs, ts: new Date().toISOString() });
-        await saveDetalhado(idx, { ...cur, movimentos });
-        renderModeBody(idx);
-        renderSaldos();
-        renderItemList();
-        showToast('Movimentação registrada.');
+    if(toggleSaldoBtn){
+      toggleSaldoBtn.addEventListener('click', ()=>{
+        const isHidden = saldoFormWrap.style.display === 'none';
+        saldoFormWrap.style.display = isHidden ? 'block' : 'none';
+        toggleSaldoBtn.textContent = isHidden ? '− Fechar' : '📌 Informar saldo conhecido numa data';
       });
     }
 
@@ -1114,53 +1088,6 @@ function saldoFormHtml(){
         <textarea id="sObs" placeholder="ex: contagem física, saldo conferido no sistema…" style="width:100%; border:1px solid var(--line); border-radius:7px; padding:8px 10px; font-family:var(--sans); font-size:0.85rem;"></textarea>
       </div>
       <p style="color:var(--ink-soft); font-size:0.76rem; margin:-8px 0 14px;">Use esta opção quando não quiser lançar cada entrada/saída: informe direto o saldo real de cada qualificação numa data — o cálculo continua dali pra frente.</p>
-  `;
-}
-
-function movFormHtml(){
-  return `
-      <form class="entry-form" id="movForm">
-        <div>
-          <label>Tipo de lançamento</label>
-          <select id="mTipo">
-            <option value="">Selecione…</option>
-            <option>RST - Requisição de Transferência</option>
-            <option>NFE - Entrada de NFe / Retorno (285)</option>
-            <option>COM - Entrada de NFe (1)</option>
-            <option>NFe - Nota Fiscal</option>
-            <option>RSE - Requisição de Entrada</option>
-            <option>Outro</option>
-          </select>
-        </div>
-        <div>
-          <label>Qual qualificação movimentou</label>
-          <select id="mQualif" required>
-            <option value="">Selecione…</option>
-            <option value="Indefinido">Indefinido</option>
-            <option value="Gerencial">Gerencial</option>
-            <option value="Ambas">As duas (indefinido e gerencial)</option>
-          </select>
-        </div>
-        <div>
-          <label>Data</label>
-          <input type="date" id="mData" required>
-        </div>
-        <div>
-          <label>Código do registro</label>
-          <input type="text" id="mCodigo" placeholder="nº requisição/NF…">
-        </div>
-        <div>
-          <label>Quantidade</label>
-          <input type="number" id="mQtd" placeholder="entrada: 5 · saída: -5">
-        </div>
-        <div>
-          <button type="submit" class="btn small">Adicionar</button>
-        </div>
-        <div class="full">
-          <label>Observação (opcional)</label>
-          <textarea id="mObs" placeholder="Detalhes do que foi encontrado no sistema…"></textarea>
-        </div>
-      </form>
   `;
 }
 
@@ -1224,12 +1151,15 @@ function renderTimeline(idx){
   wrap.querySelectorAll('button[data-i]').forEach(btn=>{
     btn.addEventListener('click', async ()=>{
       const i = Number(btn.dataset.i);
-      const cur = getDetalhado(idx);
-      // timeline está ordenada por data; precisamos remover o movimento correspondente da lista original
-      const sortedTimeline = calc.timeline;
-      const target = sortedTimeline[i];
-      const movimentos = (cur.movimentos || []).filter(m=> m.ts !== target.ts);
-      await saveDetalhado(idx, { ...cur, movimentos });
+      const target = calc.timeline[i];
+      if(target.kind === 'checkpoint'){
+        const cur = getDetalhado(idx);
+        const movimentos = (cur.movimentos || []).filter(m=> m.ts !== target.ts);
+        await saveDetalhado(idx, { ...cur, movimentos });
+      }else{
+        const list = (entriesCache[idx] || []).filter(e=> e.ts !== target.ts);
+        await saveEntries(idx, list);
+      }
       renderModeBody(idx);
       renderSaldos();
       renderItemList();
@@ -1258,6 +1188,7 @@ function entryFormHtml(){
             <option value="">Selecione…</option>
             <option value="Indefinido">Indefinido</option>
             <option value="Gerencial">Gerencial</option>
+            <option value="Ambas">As duas (indefinido e gerencial)</option>
           </select>
         </div>
         <div>
