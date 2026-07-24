@@ -552,21 +552,27 @@ function showToast(msg){
 }
 
 /* ============ STATUS LOGIC ============ */
-function rowStatus(row){
-  const d = getDetalhado(row.idx);
-  if(d.enabled){
-    const calc = calcDetalhado(row.idx);
-    if(!calc || calc.timeline.length === 0) return 'pendente';
-    const bateIndef = calc.indef === row.saldoIndefinido;
-    const bateGer = calc.ger === row.saldoGerencial;
-    return (bateIndef && bateGer) ? 'resolvido' : 'parcial';
-  }
+function simpleStatus(row){
   const entries = entriesCache[row.idx] || [];
   if(entries.length === 0) return 'pendente';
   const sum = entries.reduce((a,e)=> a + Number(e.quantidade || 0), 0);
   if(row.diferenca === 0) return sum === 0 ? 'pendente' : 'resolvido';
   const pct = Math.abs(sum / row.diferenca);
   return pct >= 1 ? 'resolvido' : 'parcial';
+}
+
+function rowStatus(row){
+  const d = getDetalhado(row.idx);
+  if(d.enabled){
+    const calc = calcDetalhado(row.idx);
+    // Enquanto a análise detalhada ainda não tem data/saldo base ou movimentos,
+    // não descarta o que já foi apurado no registro simples — mantém o status dele.
+    if(!calc || calc.timeline.length === 0) return simpleStatus(row);
+    const bateIndef = calc.indef === row.saldoIndefinido;
+    const bateGer = calc.ger === row.saldoGerencial;
+    return (bateIndef && bateGer) ? 'resolvido' : 'parcial';
+  }
+  return simpleStatus(row);
 }
 function statusLabel(s){
   return s === 'resolvido' ? 'Resolvido' : s === 'parcial' ? 'Parcial' : 'Pendente';
@@ -754,7 +760,7 @@ function renderDetail(idx){
       <div>Saldo indefinido<strong>${r.saldoIndefinido}</strong></div>
       <div>Saldo gerencial<strong>${r.saldoGerencial}</strong></div>
       <div>Diferença total<strong style="color:${r.diferenca>=0?'var(--green)':'var(--red)'}">${r.diferenca>0?'+':''}${r.diferenca}</strong></div>
-      ${d.enabled ? '' : `<div>Já apurado<strong style="color:var(--teal)">${sum>0?'+':''}${sum}</strong></div>`}
+      <div>Já apurado<strong style="color:var(--teal)">${sum>0?'+':''}${sum}</strong></div>
     </div>
 
     ${modeToggleHtml}
@@ -779,10 +785,19 @@ function renderModeBody(idx){
   const d = getDetalhado(idx);
   const wrap = document.getElementById('modeBody');
 
+  wrap.innerHTML = `
+    <div id="simpleModeWrap"></div>
+    ${d.enabled ? `
+      <hr style="border:none; border-top:1px solid var(--line); margin:22px 0;">
+      <h3 style="font-size:0.95rem; margin:0 0 4px;">Análise detalhada (saldo por qualificação)</h3>
+      <p style="color:var(--ink-soft); font-size:0.78rem; margin:0 0 14px;">Os lançamentos acima continuam registrados normalmente. Use esta seção para detalhar qual qualificação movimentou em cada divergência.</p>
+      <div id="detalhadoModeWrap"></div>
+    ` : ''}
+  `;
+
+  renderSimpleBody(document.getElementById('simpleModeWrap'), idx, r);
   if(d.enabled){
-    renderDetalhadoBody(wrap, idx, r, d);
-  }else{
-    renderSimpleBody(wrap, idx, r);
+    renderDetalhadoBody(document.getElementById('detalhadoModeWrap'), idx, r, d);
   }
 }
 
