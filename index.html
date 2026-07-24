@@ -217,11 +217,76 @@
 
   .footer-note{ text-align:center; color:var(--ink-soft); font-size:0.75rem; margin-top:22px;}
 
+  /* MODO DETALHADO */
+  .mode-toggle{
+    display:flex; align-items:center; justify-content:space-between; gap:12px;
+    background:#f7f9fb; border:1px solid var(--line); border-radius:10px;
+    padding:11px 14px; margin-bottom:16px;
+  }
+  .mode-toggle .mt-text{ font-size:0.82rem; }
+  .mode-toggle .mt-text b{ display:block; color:var(--ink); font-size:0.85rem;}
+  .mode-toggle .mt-text span{ color:var(--ink-soft); font-size:0.74rem;}
+  .switch{ position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0;}
+  .switch input{ opacity:0; width:0; height:0;}
+  .switch .slider{
+    position:absolute; cursor:pointer; inset:0; background:#c7ced6; border-radius:22px; transition:.2s;
+  }
+  .switch .slider:before{
+    position:absolute; content:""; height:16px; width:16px; left:3px; top:3px;
+    background:#fff; border-radius:50%; transition:.2s;
+  }
+  .switch input:checked + .slider{ background:var(--teal);}
+  .switch input:checked + .slider:before{ transform:translateX(18px);}
+
+  .base-form{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)) auto; gap:10px; align-items:end;
+    background:#eef4f3; border:1px solid #cfe3e1; border-radius:10px; padding:14px; margin-bottom:14px;
+  }
+  .base-form label{ font-size:0.72rem; color:var(--ink-soft); font-weight:600; display:block; margin-bottom:4px;}
+  .base-form input{
+    width:100%; padding:8px 10px; border:1px solid var(--line); border-radius:7px;
+    font-family:var(--sans); font-size:0.85rem; outline:none;
+  }
+  .base-info{
+    display:flex; gap:18px; flex-wrap:wrap; background:#eef4f3; border:1px solid #cfe3e1;
+    border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:0.8rem;
+  }
+  .base-info b{ font-family:var(--mono);}
+
+  .balance-summary{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px;}
+  .balance-card{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:#fff;}
+  .balance-card .bc-label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:4px;}
+  .balance-card .bc-row{ display:flex; justify-content:space-between; font-size:0.82rem; margin-top:2px;}
+  .balance-card .bc-row b{ font-family:var(--mono);}
+  .balance-card.match{ border-color:var(--green); background:var(--green-bg);}
+  .balance-card.mismatch{ border-color:var(--amber); background:var(--amber-bg);}
+
+  .timeline-wrap{ max-height:340px; overflow:auto; border:1px solid var(--line); border-radius:10px; margin-bottom:8px;}
+  table.timeline th{
+    text-align:left; padding:7px 9px; background:#f4f6f9; color:var(--ink-soft);
+    font-size:0.66rem; text-transform:uppercase; letter-spacing:0.03em; font-weight:700;
+    border-bottom:1px solid var(--line); position:sticky; top:0;
+  }
+  table.timeline td{ padding:7px 9px; border-bottom:1px solid #eef0f3; font-size:0.78rem;}
+  .qualif-chip{
+    display:inline-block; padding:1px 8px; border-radius:20px; font-size:0.68rem; font-weight:700;
+  }
+  .qualif-indefinido{ background:#e7edf7; color:var(--navy);}
+  .qualif-gerencial{ background:#f1e8f7; color:#6b3fa0;}
+  .qualif-ambas{ background:#fff0e0; color:#b56a1a;}
+
 
   .cv-app{ max-width:1000px; margin:0 auto; padding:24px 20px 60px; }
   .cv-hdr{
     background: linear-gradient(135deg, var(--navy-deep), var(--navy));
     border-radius:14px; padding:32px 30px; color:#fff; text-align:center;
+  }
+  .cv-logo{ max-height:56px; max-width:220px; display:block; margin:0 auto 16px;}
+  .cv-logo-placeholder{
+    display:none; width:150px; height:56px; margin:0 auto 16px;
+    border:1.5px dashed rgba(255,255,255,0.4); border-radius:8px;
+    align-items:center; justify-content:center; text-align:center; line-height:1.2;
+    color:rgba(255,255,255,0.55); font-size:0.65rem; letter-spacing:0.06em; text-transform:uppercase;
   }
   .cv-hdr h1{ margin:0 0 6px; font-size:1.7rem; font-weight:700; letter-spacing:-0.01em;}
   .cv-hdr .cv-sub{ color:#c9d6e3; font-size:0.9rem; margin:0;}
@@ -246,7 +311,6 @@
   .cv-month-status.disponivel{ background:var(--green-bg); color:var(--green);}
   .cv-month-status.embreve{ background:#f1f3f6; color:var(--ink-soft);}
   .cv-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block;}
-  .cv-footer-note{ text-align:center; color:var(--ink-soft); font-size:0.78rem; margin-top:32px;}
 
 </style>
 </head>
@@ -257,6 +321,9 @@
   <div class="cv-app">
 
     <div class="cv-hdr">
+      <img class="cv-logo" src="logo-moderna-mobilia.png" alt="Moderna Mobília"
+           onerror="this.style.display='none'; document.getElementById('logoPlaceholder').style.display='flex';">
+      <div class="cv-logo-placeholder" id="logoPlaceholder">LOGO<br>AQUI</div>
       <h1>Controle de Divergências de Saldos</h1>
       <p class="cv-sub">MODERNA MOBÍLIA</p>
     </div>
@@ -267,8 +334,6 @@
     </div>
 
     <div class="cv-months-grid" id="monthsGrid"></div>
-
-    <p class="cv-footer-note">Cada mês tem sua própria análise, com dados salvos e compartilhados em tempo real.</p>
   </div>
 </div>
 
@@ -397,6 +462,7 @@ const db = firebase.database();
 const rootRef = db.ref('controle_divergencias');
 
 let entriesCache = {}; // idx -> array of lançamentos
+let detalhadoCache = {}; // idx -> { enabled, dataBase, saldoBase, movimentos: [] }
 const PERIODO_LABEL = 'Julho de 2026';
 const PERIODO_ARQUIVO = 'julho_2026';
 let firebaseConnected = false;
@@ -409,6 +475,41 @@ async function saveEntries(idx, entries){
     console.error('Erro ao salvar no Firebase', e);
     showToast('Não foi possível salvar — verifique sua conexão ou as regras do Firebase.');
   }
+}
+
+/* ---- Modo detalhado: saldo por qualificação (Indefinido/Gerencial/Ambas) ---- */
+function getDetalhado(idx){
+  return detalhadoCache[idx] || { enabled:false, dataBase:'', saldoBase:null, movimentos:[] };
+}
+
+async function saveDetalhado(idx, obj){
+  detalhadoCache[idx] = obj;
+  try{
+    await rootRef.child('detalhado/' + idx).set(obj);
+  }catch(e){
+    console.error('Erro ao salvar modo detalhado no Firebase', e);
+    showToast('Não foi possível salvar — verifique sua conexão ou as regras do Firebase.');
+  }
+}
+
+// Aplica os movimentos em ordem de data sobre o saldo base e devolve o saldo
+// calculado de indefinido e gerencial, além da linha do tempo com saldo após cada movimento.
+function calcDetalhado(idx){
+  const d = getDetalhado(idx);
+  if(!d.enabled || d.saldoBase === null || d.saldoBase === undefined || d.saldoBase === '' || !d.dataBase){
+    return null;
+  }
+  let indef = Number(d.saldoBase);
+  let ger = Number(d.saldoBase);
+  const movs = (d.movimentos || []).slice()
+    .sort((a,b)=> (a.data||'').localeCompare(b.data||'') || (a.ts||'').localeCompare(b.ts||''));
+  const timeline = movs.map(m=>{
+    const q = Number(m.quantidade || 0);
+    if(m.qualif === 'Indefinido' || m.qualif === 'Ambas') indef += q;
+    if(m.qualif === 'Gerencial' || m.qualif === 'Ambas') ger += q;
+    return { ...m, saldoIndefApos: indef, saldoGerApos: ger, diferencaApos: indef - ger };
+  });
+  return { indef, ger, timeline };
 }
 
 function refreshDetailIfSafe(){
@@ -426,6 +527,7 @@ function attachRealtimeSync(){
   rootRef.on('value', (snapshot)=>{
     const data = snapshot.val() || {};
     entriesCache = data.entries || {};
+    detalhadoCache = data.detalhado || {};
     firebaseConnected = true;
     const note = document.getElementById('storageModeNote');
     if(note) note.textContent = '🔗 Conectado ao Firebase — dados compartilhados em tempo real com quem mais tiver este link.';
@@ -451,6 +553,14 @@ function showToast(msg){
 
 /* ============ STATUS LOGIC ============ */
 function rowStatus(row){
+  const d = getDetalhado(row.idx);
+  if(d.enabled){
+    const calc = calcDetalhado(row.idx);
+    if(!calc || calc.timeline.length === 0) return 'pendente';
+    const bateIndef = calc.indef === row.saldoIndefinido;
+    const bateGer = calc.ger === row.saldoGerencial;
+    return (bateIndef && bateGer) ? 'resolvido' : 'parcial';
+  }
   const entries = entriesCache[row.idx] || [];
   if(entries.length === 0) return 'pendente';
   const sum = entries.reduce((a,e)=> a + Number(e.quantidade || 0), 0);
@@ -620,6 +730,20 @@ function renderDetail(idx){
   const sum = entries.reduce((a,e)=> a + Number(e.quantidade||0), 0);
   const pct = r.diferenca !== 0 ? Math.min(100, Math.abs(sum / r.diferenca) * 100) : 0;
   const st = rowStatus(r);
+  const d = getDetalhado(idx);
+
+  const modeToggleHtml = `
+    <div class="mode-toggle">
+      <div class="mt-text">
+        <b>Registro detalhado de divergências</b>
+        <span>Use quando existem lançamentos que movimentam só o indefinido, só o gerencial, ou os dois — para calcular o saldo de cada um ao longo do período.</span>
+      </div>
+      <label class="switch">
+        <input type="checkbox" id="modoDetalhadoToggle" ${d.enabled ? 'checked' : ''}>
+        <span class="slider"></span>
+      </label>
+    </div>
+  `;
 
   card.innerHTML = `
     <p class="item-title">Item ${r.item} <span style="color:var(--ink-soft); font-weight:500; font-size:0.9rem;">— ${r.descricaoItem}</span></p>
@@ -630,9 +754,46 @@ function renderDetail(idx){
       <div>Saldo indefinido<strong>${r.saldoIndefinido}</strong></div>
       <div>Saldo gerencial<strong>${r.saldoGerencial}</strong></div>
       <div>Diferença total<strong style="color:${r.diferenca>=0?'var(--green)':'var(--red)'}">${r.diferenca>0?'+':''}${r.diferenca}</strong></div>
-      <div>Já apurado<strong style="color:var(--teal)">${sum>0?'+':''}${sum}</strong></div>
+      ${d.enabled ? '' : `<div>Já apurado<strong style="color:var(--teal)">${sum>0?'+':''}${sum}</strong></div>`}
     </div>
 
+    ${modeToggleHtml}
+
+    <div id="modeBody"></div>
+  `;
+
+  renderModeBody(idx);
+
+  document.getElementById('modoDetalhadoToggle').addEventListener('change', async (e)=>{
+    const cur = getDetalhado(idx);
+    const updated = { ...cur, enabled: e.target.checked };
+    await saveDetalhado(idx, updated);
+    renderDetail(idx);
+    renderSaldos();
+    renderItemList();
+  });
+}
+
+function renderModeBody(idx){
+  const r = rows.find(x=> x.idx === idx);
+  const d = getDetalhado(idx);
+  const wrap = document.getElementById('modeBody');
+
+  if(d.enabled){
+    renderDetalhadoBody(wrap, idx, r, d);
+  }else{
+    renderSimpleBody(wrap, idx, r);
+  }
+}
+
+/* ---------- MODO SIMPLES (padrão, um valor de quantidade por divergência) ---------- */
+function renderSimpleBody(wrap, idx, r){
+  const entries = entriesCache[idx] || [];
+  const sum = entries.reduce((a,e)=> a + Number(e.quantidade||0), 0);
+  const pct = r.diferenca !== 0 ? Math.min(100, Math.abs(sum / r.diferenca) * 100) : 0;
+  const st = rowStatus(r);
+
+  wrap.innerHTML = `
     <div style="margin-bottom:18px;">
       <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:var(--ink-soft); margin-bottom:2px;">
         <span>Apuração da diferença</span>
@@ -642,11 +803,298 @@ function renderDetail(idx){
     </div>
 
     ${st === 'resolvido' ? `
-      <div style="display:flex; align-items:center; gap:10px; background:var(--green-bg); color:var(--green); border-radius:10px; padding:12px 14px; margin-bottom:16px; font-size:0.85rem; font-weight:600;">
-        <span style="font-size:1.1rem;">✓</span> Diferença já apurada
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; background:var(--green-bg); color:var(--green); border-radius:10px; padding:12px 14px; margin-bottom:12px; font-size:0.85rem; font-weight:600;">
+        <span style="display:flex; align-items:center; gap:8px;"><span style="font-size:1.1rem;">✓</span> Diferença já apurada</span>
+        <button type="button" id="toggleAddBtn" class="btn ghost" style="font-size:0.7rem; padding:5px 10px; font-weight:600;">+ Adicionar lançamento</button>
+      </div>
+      <div id="entryFormWrap" style="display:none; margin-bottom:16px;">
+        ${entryFormHtml()}
       </div>
     ` : `
       <h3 style="font-size:0.95rem; margin:0 0 10px;">Registrar divergência encontrada</h3>
+      ${entryFormHtml()}
+    `}
+
+    <h3 style="font-size:0.95rem; margin:18px 0 10px;">Divergências registradas (${entries.length})</h3>
+    <div class="entries-list" id="entriesList"></div>
+  `;
+
+  renderEntries(idx);
+
+  const toggleBtn = document.getElementById('toggleAddBtn');
+  if(toggleBtn){
+    toggleBtn.addEventListener('click', ()=>{
+      const w = document.getElementById('entryFormWrap');
+      const isHidden = w.style.display === 'none';
+      w.style.display = isHidden ? 'block' : 'none';
+      toggleBtn.textContent = isHidden ? '− Fechar' : '+ Adicionar lançamento';
+    });
+  }
+
+  const entryForm = document.getElementById('entryForm');
+  if(entryForm){
+    entryForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const tipo = document.getElementById('fTipo').value;
+      const qualif = document.getElementById('fQualif').value.trim();
+      const data = document.getElementById('fData').value;
+      const codigo = document.getElementById('fCodigo').value.trim();
+      const qtd = document.getElementById('fQtd').value;
+      const obs = document.getElementById('fObs').value.trim();
+      if(!tipo || !qualif || qtd === ''){ showToast('Preencha tipo de lançamento, qualificação e quantidade.'); return; }
+      const list = entriesCache[idx] ? [...entriesCache[idx]] : [];
+      list.push({ tipo, qualif, data, codigo, quantidade: Number(qtd), obs, ts: new Date().toISOString() });
+      await saveEntries(idx, list);
+      renderModeBody(idx);
+      renderSaldos();
+      renderItemList();
+      showToast('Divergência registrada.');
+    });
+  }
+}
+
+/* ---------- MODO DETALHADO (saldo por qualificação ao longo do período) ---------- */
+function renderDetalhadoBody(wrap, idx, r, d){
+  const calc = calcDetalhado(idx);
+  const hasBase = d.dataBase && (d.saldoBase !== null && d.saldoBase !== undefined && d.saldoBase !== '');
+
+  const baseFormHtml = `
+    <form class="base-form" id="baseForm">
+      <div>
+        <label>Data com saldos iguais</label>
+        <input type="date" id="fDataBase" value="${d.dataBase || ''}" required>
+      </div>
+      <div>
+        <label>Saldo naquela data (indefinido = gerencial)</label>
+        <input type="number" id="fSaldoBase" value="${hasBase ? d.saldoBase : ''}" placeholder="ex: 20" required>
+      </div>
+      <div>
+        <button type="submit" class="btn small">${hasBase ? 'Atualizar data base' : 'Salvar data base'}</button>
+      </div>
+    </form>
+  `;
+
+  const baseInfoHtml = hasBase ? `
+    <div class="base-info">
+      <span>Data base: <b>${d.dataBase.split('-').reverse().join('/')}</b></span>
+      <span>Saldo na data base: <b>${d.saldoBase}</b></span>
+      <button type="button" id="editBaseBtn" class="btn ghost small" style="margin-left:auto;">Editar</button>
+    </div>
+  ` : '';
+
+  let balanceSummaryHtml = '';
+  if(calc){
+    const bateIndef = calc.indef === r.saldoIndefinido;
+    const bateGer = calc.ger === r.saldoGerencial;
+    const difCalc = calc.indef - calc.ger;
+    const bateDif = difCalc === r.diferenca;
+    balanceSummaryHtml = `
+      <div class="balance-summary">
+        <div class="balance-card ${bateIndef ? 'match' : 'mismatch'}">
+          <div class="bc-label">Indefinido</div>
+          <div class="bc-row"><span>Calculado</span><b>${calc.indef}</b></div>
+          <div class="bc-row"><span>Real (atual)</span><b>${r.saldoIndefinido}</b></div>
+          <div class="bc-row"><span>${bateIndef ? '✓ Bate' : '✗ Não bate'}</span></div>
+        </div>
+        <div class="balance-card ${bateGer ? 'match' : 'mismatch'}">
+          <div class="bc-label">Gerencial</div>
+          <div class="bc-row"><span>Calculado</span><b>${calc.ger}</b></div>
+          <div class="bc-row"><span>Real (atual)</span><b>${r.saldoGerencial}</b></div>
+          <div class="bc-row"><span>${bateGer ? '✓ Bate' : '✗ Não bate'}</span></div>
+        </div>
+        <div class="balance-card ${bateDif ? 'match' : 'mismatch'}">
+          <div class="bc-label">Diferença (indef. − ger.)</div>
+          <div class="bc-row"><span>Calculada</span><b>${difCalc>0?'+':''}${difCalc}</b></div>
+          <div class="bc-row"><span>Real (atual)</span><b>${r.diferenca>0?'+':''}${r.diferenca}</b></div>
+          <div class="bc-row"><span>${bateDif ? '✓ Bate' : '✗ Falta explicar ' + (r.diferenca - difCalc)}</span></div>
+        </div>
+      </div>
+    `;
+  }
+
+  const movForm = hasBase ? movFormHtml() : '';
+
+  wrap.innerHTML = `
+    <h3 style="font-size:0.95rem; margin:0 0 10px;">1. Data e saldo em que indefinido e gerencial eram iguais</h3>
+    <div id="baseFormWrap">${hasBase ? baseInfoHtml : baseFormHtml}</div>
+
+    ${hasBase ? `
+      ${balanceSummaryHtml}
+      <h3 style="font-size:0.95rem; margin:18px 0 10px;">2. Registrar movimentações que geraram divergência</h3>
+      ${movForm}
+      <h3 style="font-size:0.95rem; margin:18px 0 10px;">Linha do tempo (${calc ? calc.timeline.length : 0})</h3>
+      <div id="timelineWrap"></div>
+    ` : `<p style="color:var(--ink-soft); font-size:0.82rem;">Informe a data e o saldo em que os dois estoques ainda estavam corretos para começar.</p>`}
+  `;
+
+  const baseForm = document.getElementById('baseForm');
+  if(baseForm){
+    baseForm.addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const dataBase = document.getElementById('fDataBase').value;
+      const saldoBase = document.getElementById('fSaldoBase').value;
+      if(!dataBase || saldoBase === ''){ showToast('Informe a data e o saldo base.'); return; }
+      const updated = { ...d, dataBase, saldoBase: Number(saldoBase), movimentos: d.movimentos || [] };
+      await saveDetalhado(idx, updated);
+      renderModeBody(idx);
+      renderSaldos();
+      renderItemList();
+      showToast('Data base salva.');
+    });
+  }
+
+  const editBaseBtn = document.getElementById('editBaseBtn');
+  if(editBaseBtn){
+    editBaseBtn.addEventListener('click', ()=>{
+      document.getElementById('baseFormWrap').innerHTML = baseFormHtml;
+      document.getElementById('baseForm').addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const dataBase = document.getElementById('fDataBase').value;
+        const saldoBase = document.getElementById('fSaldoBase').value;
+        if(!dataBase || saldoBase === ''){ showToast('Informe a data e o saldo base.'); return; }
+        const updated = { ...d, dataBase, saldoBase: Number(saldoBase), movimentos: d.movimentos || [] };
+        await saveDetalhado(idx, updated);
+        renderModeBody(idx);
+        renderSaldos();
+        renderItemList();
+        showToast('Data base atualizada.');
+      });
+    });
+  }
+
+  if(hasBase){
+    renderTimeline(idx);
+    const movForm2 = document.getElementById('movForm');
+    if(movForm2){
+      movForm2.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const tipo = document.getElementById('mTipo').value;
+        const qualif = document.getElementById('mQualif').value;
+        const data = document.getElementById('mData').value;
+        const codigo = document.getElementById('mCodigo').value.trim();
+        const qtd = document.getElementById('mQtd').value;
+        const obs = document.getElementById('mObs').value.trim();
+        if(!qualif || !data || qtd === ''){ showToast('Preencha qualificação, data e quantidade.'); return; }
+        const cur = getDetalhado(idx);
+        const movimentos = cur.movimentos ? [...cur.movimentos] : [];
+        movimentos.push({ tipo, qualif, data, codigo, quantidade: Number(qtd), obs, ts: new Date().toISOString() });
+        await saveDetalhado(idx, { ...cur, movimentos });
+        renderModeBody(idx);
+        renderSaldos();
+        renderItemList();
+        showToast('Movimentação registrada.');
+      });
+    }
+  }
+}
+
+function movFormHtml(){
+  return `
+      <form class="entry-form" id="movForm">
+        <div>
+          <label>Tipo de lançamento</label>
+          <select id="mTipo">
+            <option value="">Selecione…</option>
+            <option>RST - Requisição de Transferência</option>
+            <option>NFE - Entrada de NFe / Retorno (285)</option>
+            <option>COM - Entrada de NFe (1)</option>
+            <option>NFe - Nota Fiscal</option>
+            <option>RSE - Requisição de Entrada</option>
+            <option>Outro</option>
+          </select>
+        </div>
+        <div>
+          <label>Qual qualificação movimentou</label>
+          <select id="mQualif" required>
+            <option value="">Selecione…</option>
+            <option value="Indefinido">Indefinido</option>
+            <option value="Gerencial">Gerencial</option>
+            <option value="Ambas">As duas (indefinido e gerencial)</option>
+          </select>
+        </div>
+        <div>
+          <label>Data</label>
+          <input type="date" id="mData" required>
+        </div>
+        <div>
+          <label>Código do registro</label>
+          <input type="text" id="mCodigo" placeholder="nº requisição/NF…">
+        </div>
+        <div>
+          <label>Quantidade</label>
+          <input type="number" id="mQtd" placeholder="entrada: 5 · saída: -5">
+        </div>
+        <div>
+          <button type="submit" class="btn small">Adicionar</button>
+        </div>
+        <div class="full">
+          <label>Observação (opcional)</label>
+          <textarea id="mObs" placeholder="Detalhes do que foi encontrado no sistema…"></textarea>
+        </div>
+      </form>
+  `;
+}
+
+function renderTimeline(idx){
+  const calc = calcDetalhado(idx);
+  const wrap = document.getElementById('timelineWrap');
+  if(!wrap) return;
+  const d = getDetalhado(idx);
+  if(!calc || calc.timeline.length === 0){
+    wrap.innerHTML = '<div class="no-entries">Nenhuma movimentação registrada ainda para este item.</div>';
+    return;
+  }
+  const rowsHtml = calc.timeline.map((m, i)=>{
+    const dataFmt = m.data ? m.data.split('-').reverse().join('/') : '';
+    const qualifClass = m.qualif === 'Indefinido' ? 'qualif-indefinido' : m.qualif === 'Gerencial' ? 'qualif-gerencial' : 'qualif-ambas';
+    return `
+      <tr>
+        <td>${dataFmt}</td>
+        <td><span class="qualif-chip ${qualifClass}">${m.qualif}</span></td>
+        <td>${m.tipo || '-'}</td>
+        <td>${m.codigo || '-'}</td>
+        <td class="mono" style="color:${m.quantidade>=0?'var(--green)':'var(--red)'}">${m.quantidade>0?'+':''}${m.quantidade}</td>
+        <td class="mono">${m.saldoIndefApos}</td>
+        <td class="mono">${m.saldoGerApos}</td>
+        <td class="mono" style="color:${m.diferencaApos===0?'var(--green)':'var(--red)'}; font-weight:700;">${m.diferencaApos>0?'+':''}${m.diferencaApos}</td>
+        <td>${m.obs ? `<span title="${m.obs.replace(/"/g,'&quot;')}">${m.obs}</span>` : ''}</td>
+        <td><button class="btn danger small" data-i="${i}">✕</button></td>
+      </tr>
+    `;
+  }).join('');
+
+  wrap.innerHTML = `
+    <div class="timeline-wrap">
+      <table class="timeline">
+        <thead>
+          <tr>
+            <th>Data</th><th>Qualificação</th><th>Tipo</th><th>Código</th><th>Qtd</th>
+            <th>Saldo indef.</th><th>Saldo ger.</th><th>Diferença</th><th>Obs.</th><th></th>
+          </tr>
+        </thead>
+        <tbody>${rowsHtml}</tbody>
+      </table>
+    </div>
+  `;
+
+  wrap.querySelectorAll('button[data-i]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const i = Number(btn.dataset.i);
+      const cur = getDetalhado(idx);
+      // timeline está ordenada por data; precisamos remover o movimento correspondente da lista original
+      const sortedTimeline = calc.timeline;
+      const target = sortedTimeline[i];
+      const movimentos = (cur.movimentos || []).filter(m=> m.ts !== target.ts);
+      await saveDetalhado(idx, { ...cur, movimentos });
+      renderModeBody(idx);
+      renderSaldos();
+      renderItemList();
+    });
+  });
+}
+
+function entryFormHtml(){
+  return `
       <form class="entry-form" id="entryForm">
         <div>
           <label>Tipo de lançamento</label>
@@ -688,34 +1136,7 @@ function renderDetail(idx){
           <textarea id="fObs" placeholder="Detalhes do que foi encontrado no sistema…"></textarea>
         </div>
       </form>
-    `}
-
-    <h3 style="font-size:0.95rem; margin:18px 0 10px;">Divergências registradas (${entries.length})</h3>
-    <div class="entries-list" id="entriesList"></div>
   `;
-
-  renderEntries(idx);
-
-  const entryForm = document.getElementById('entryForm');
-  if(entryForm){
-    entryForm.addEventListener('submit', async (e)=>{
-      e.preventDefault();
-      const tipo = document.getElementById('fTipo').value;
-      const qualif = document.getElementById('fQualif').value.trim();
-      const data = document.getElementById('fData').value;
-      const codigo = document.getElementById('fCodigo').value.trim();
-      const qtd = document.getElementById('fQtd').value;
-      const obs = document.getElementById('fObs').value.trim();
-      if(!tipo || !qualif || qtd === ''){ showToast('Preencha tipo de lançamento, qualificação e quantidade.'); return; }
-      const list = entriesCache[idx] ? [...entriesCache[idx]] : [];
-      list.push({ tipo, qualif, data, codigo, quantidade: Number(qtd), obs, ts: new Date().toISOString() });
-      await saveEntries(idx, list);
-      renderDetail(idx);
-      renderSaldos();
-      renderItemList();
-      showToast('Divergência registrada.');
-    });
-  }
 }
 
 function renderEntries(idx){
@@ -747,7 +1168,7 @@ function renderEntries(idx){
       const list2 = [...entriesCache[idx]];
       list2.splice(i,1);
       await saveEntries(idx, list2);
-      renderDetail(idx);
+      renderModeBody(idx);
       renderSaldos();
       renderItemList();
     });
@@ -781,6 +1202,24 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
   lines.push('');
   let any = false;
   for(const r of rows){
+    const det = getDetalhado(r.idx);
+    if(det.enabled){
+      const calc = calcDetalhado(r.idx);
+      if(!calc || calc.timeline.length === 0) continue;
+      any = true;
+      lines.push('----------------------------------------');
+      lines.push(`Item ${r.item} — ${r.descricaoItem}`);
+      lines.push(`Cor: ${r.cor} - ${r.descricaoCor} | Variação: ${r.variacao} - ${r.descricaoVariacao} | Acabamento: ${r.acabamento} - ${r.descricaoAcabamento}`);
+      lines.push(`Modo: registro detalhado (saldo por qualificação) | Data base: ${det.dataBase.split('-').reverse().join('/')} | Saldo base: ${det.saldoBase}`);
+      lines.push(`Saldo indefinido calculado: ${calc.indef} (real: ${r.saldoIndefinido}) | Saldo gerencial calculado: ${calc.ger} (real: ${r.saldoGerencial}) | Diferença calculada: ${calc.indef - calc.ger} (real: ${r.diferenca})`);
+      lines.push(`Status: ${statusLabel(rowStatus(r))}`);
+      lines.push('Movimentações registradas:');
+      calc.timeline.forEach(m=>{
+        lines.push(`  - [${m.data ? m.data.split('-').reverse().join('/') : '-'}] ${m.tipo || '-'} | Qualificação: ${m.qualif} | Código: ${m.codigo || '-'} | Qtd: ${m.quantidade} | Saldo indef. após: ${m.saldoIndefApos} | Saldo ger. após: ${m.saldoGerApos} | Diferença após: ${m.diferencaApos}${m.obs ? ' | Obs: ' + m.obs : ''}`);
+      });
+      lines.push('');
+      continue;
+    }
     const entries = entriesCache[r.idx] || [];
     if(entries.length === 0) continue;
     any = true;
@@ -812,8 +1251,9 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
 /* ============ EXPORT EXCEL ============ */
 document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
   const saldosData = rows.map(r=>{
-    const entries = entriesCache[r.idx] || [];
-    const sum = entries.reduce((a,e)=> a + Number(e.quantidade||0), 0);
+    const det = getDetalhado(r.idx);
+    const calc = det.enabled ? calcDetalhado(r.idx) : null;
+    const sum = det.enabled ? '' : (entriesCache[r.idx] || []).reduce((a,e)=> a + Number(e.quantidade||0), 0);
     return {
       'Item': r.item,
       'Descrição': r.descricaoItem,
@@ -826,13 +1266,18 @@ document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
       'Saldo Indefinido': r.saldoIndefinido,
       'Saldo Gerencial': r.saldoGerencial,
       'Diferença': r.diferenca,
-      'Apurado': sum,
+      'Modo': det.enabled ? 'Detalhado' : 'Simples',
+      'Apurado': det.enabled ? '' : sum,
+      'Indefinido Calculado': det.enabled && calc ? calc.indef : '',
+      'Gerencial Calculado': det.enabled && calc ? calc.ger : '',
       'Status': statusLabel(rowStatus(r))
     };
   });
 
   const lancamentosData = [];
   for(const r of rows){
+    const det = getDetalhado(r.idx);
+    if(det.enabled) continue;
     const entries = entriesCache[r.idx] || [];
     entries.forEach(e=>{
       lancamentosData.push({
@@ -849,9 +1294,35 @@ document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
     });
   }
 
+  const movimentosData = [];
+  for(const r of rows){
+    const det = getDetalhado(r.idx);
+    if(!det.enabled) continue;
+    const calc = calcDetalhado(r.idx);
+    if(!calc) continue;
+    calc.timeline.forEach(m=>{
+      movimentosData.push({
+        'Item': r.item,
+        'Descrição': r.descricaoItem,
+        'Data base': det.dataBase ? det.dataBase.split('-').reverse().join('/') : '',
+        'Saldo base': det.saldoBase,
+        'Data': m.data ? m.data.split('-').reverse().join('/') : '',
+        'Tipo de Lançamento': m.tipo,
+        'Qualificação': m.qualif,
+        'Código': m.codigo,
+        'Quantidade': m.quantidade,
+        'Saldo Indefinido Após': m.saldoIndefApos,
+        'Saldo Gerencial Após': m.saldoGerApos,
+        'Diferença Após': m.diferencaApos,
+        'Observação': m.obs || ''
+      });
+    });
+  }
+
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(saldosData), 'Saldos');
   XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(lancamentosData), 'Divergências');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(movimentosData), 'Movimentações Detalhadas');
   XLSX.writeFile(wb, 'controle_divergencias_' + PERIODO_ARQUIVO + '.xlsx');
 });
 
