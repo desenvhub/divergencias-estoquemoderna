@@ -261,6 +261,29 @@
   .balance-card.match{ border-color:var(--green); background:var(--green-bg);}
   .balance-card.mismatch{ border-color:var(--amber); background:var(--amber-bg);}
 
+  .diff-card{
+    border:1.5px solid #c3cfe6; background:linear-gradient(135deg,#eef2fb,#f5f8fd);
+    border-radius:12px; padding:14px 16px; margin-bottom:16px;
+  }
+  .diff-card .dc-label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--navy); font-weight:700; margin-bottom:6px;}
+  .diff-card .dc-main{ display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; margin-bottom:6px;}
+  .diff-card .dc-value{ font-family:var(--mono); font-size:1.5rem; font-weight:700; color:var(--navy);}
+  .diff-card .dc-desc{ font-size:0.85rem; color:var(--ink);}
+  .diff-card .dc-sub{ font-size:0.78rem; color:var(--ink-soft); display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+  .diff-card .dc-badge{
+    display:inline-flex; align-items:center; gap:4px; padding:2px 10px; border-radius:20px;
+    font-size:0.72rem; font-weight:700;
+  }
+  .diff-card .dc-badge.ok{ background:var(--green-bg); color:var(--green);}
+  .diff-card .dc-badge.pending{ background:var(--amber-bg); color:var(--amber);}
+
+  .seg-tabs{ display:flex; gap:6px; margin-bottom:12px;}
+  .seg-tabs button{
+    flex:1; padding:8px 10px; border:1px solid var(--line); background:#fff; border-radius:8px;
+    font-family:var(--sans); font-size:0.78rem; font-weight:600; color:var(--ink-soft); cursor:pointer;
+  }
+  .seg-tabs button.active{ background:var(--navy); border-color:var(--navy); color:#fff;}
+
   .timeline-wrap{ max-height:340px; overflow:auto; border:1px solid var(--line); border-radius:10px; margin-bottom:8px;}
   table.timeline th{
     text-align:left; padding:7px 9px; background:#f4f6f9; color:var(--ink-soft);
@@ -274,6 +297,8 @@
   .qualif-indefinido{ background:#e7edf7; color:var(--navy);}
   .qualif-gerencial{ background:#f1e8f7; color:#6b3fa0;}
   .qualif-ambas{ background:#fff0e0; color:#b56a1a;}
+  .qualif-checkpoint{ background:#dbe4f7; color:var(--navy);}
+  table.timeline tr.checkpoint-row{ background:#f5f8fd;}
 
 
   .cv-app{ max-width:1000px; margin:0 auto; padding:24px 20px 60px; }
@@ -504,12 +529,24 @@ function calcDetalhado(idx){
   const movs = (d.movimentos || []).slice()
     .sort((a,b)=> (a.data||'').localeCompare(b.data||'') || (a.ts||'').localeCompare(b.ts||''));
   const timeline = movs.map(m=>{
-    const q = Number(m.quantidade || 0);
-    if(m.qualif === 'Indefinido' || m.qualif === 'Ambas') indef += q;
-    if(m.qualif === 'Gerencial' || m.qualif === 'Ambas') ger += q;
+    if(m.kind === 'checkpoint'){
+      indef = Number(m.saldoIndefinido || 0);
+      ger = Number(m.saldoGerencial || 0);
+    }else{
+      const q = Number(m.quantidade || 0);
+      if(m.qualif === 'Indefinido' || m.qualif === 'Ambas') indef += q;
+      if(m.qualif === 'Gerencial' || m.qualif === 'Ambas') ger += q;
+    }
     return { ...m, saldoIndefApos: indef, saldoGerApos: ger, diferencaApos: indef - ger };
   });
   return { indef, ger, timeline };
+}
+
+// Descreve uma diferença (indefinido - gerencial) em texto claro, com o lado que está maior.
+function formatDiferenca(v){
+  if(v === 0) return { texto: 'Sem diferença', tone:'zero' };
+  if(v > 0) return { texto: `${v} — indefinido maior`, tone:'pos' };
+  return { texto: `${Math.abs(v)} — gerencial maior`, tone:'neg' };
 }
 
 function refreshDetailIfSafe(){
@@ -903,7 +940,20 @@ function renderDetalhadoBody(wrap, idx, r, d){
     const bateGer = calc.ger === r.saldoGerencial;
     const difCalc = calc.indef - calc.ger;
     const bateDif = difCalc === r.diferenca;
+    const fdCalc = formatDiferenca(difCalc);
+    const fdReal = formatDiferenca(r.diferenca);
     balanceSummaryHtml = `
+      <div class="diff-card">
+        <div class="dc-label">Diferença após os lançamentos (indefinido − gerencial)</div>
+        <div class="dc-main">
+          <span class="dc-value">${difCalc>0?'+':''}${difCalc}</span>
+          <span class="dc-desc">${fdCalc.texto}</span>
+        </div>
+        <div class="dc-sub">
+          <span>Diferença real do sistema hoje: <b>${r.diferenca>0?'+':''}${r.diferenca}</b> (${fdReal.texto})</span>
+          <span class="dc-badge ${bateDif ? 'ok' : 'pending'}">${bateDif ? '✓ Já bate' : '✗ Falta explicar ' + Math.abs(r.diferenca - difCalc)}</span>
+        </div>
+      </div>
       <div class="balance-summary">
         <div class="balance-card ${bateIndef ? 'match' : 'mismatch'}">
           <div class="bc-label">Indefinido</div>
@@ -917,17 +967,18 @@ function renderDetalhadoBody(wrap, idx, r, d){
           <div class="bc-row"><span>Real (atual)</span><b>${r.saldoGerencial}</b></div>
           <div class="bc-row"><span>${bateGer ? '✓ Bate' : '✗ Não bate'}</span></div>
         </div>
-        <div class="balance-card ${bateDif ? 'match' : 'mismatch'}">
-          <div class="bc-label">Diferença (indef. − ger.)</div>
-          <div class="bc-row"><span>Calculada</span><b>${difCalc>0?'+':''}${difCalc}</b></div>
-          <div class="bc-row"><span>Real (atual)</span><b>${r.diferenca>0?'+':''}${r.diferenca}</b></div>
-          <div class="bc-row"><span>${bateDif ? '✓ Bate' : '✗ Falta explicar ' + (r.diferenca - difCalc)}</span></div>
-        </div>
       </div>
     `;
   }
 
-  const movForm = hasBase ? movFormHtml() : '';
+  const movForm = hasBase ? `
+      <div class="seg-tabs">
+        <button type="button" id="tabMov" class="active">+ Lançar movimentação</button>
+        <button type="button" id="tabSaldo">📌 Informar saldo conhecido na data</button>
+      </div>
+      <div id="movFormWrap">${movFormHtml()}</div>
+      <div id="saldoFormWrap" style="display:none;">${saldoFormHtml()}</div>
+  ` : '';
 
   wrap.innerHTML = `
     <h3 style="font-size:0.95rem; margin:0 0 10px;">1. Data e saldo em que indefinido e gerencial eram iguais</h3>
@@ -979,6 +1030,22 @@ function renderDetalhadoBody(wrap, idx, r, d){
 
   if(hasBase){
     renderTimeline(idx);
+
+    const tabMov = document.getElementById('tabMov');
+    const tabSaldo = document.getElementById('tabSaldo');
+    const movFormWrap = document.getElementById('movFormWrap');
+    const saldoFormWrap = document.getElementById('saldoFormWrap');
+    if(tabMov && tabSaldo){
+      tabMov.addEventListener('click', ()=>{
+        tabMov.classList.add('active'); tabSaldo.classList.remove('active');
+        movFormWrap.style.display = 'block'; saldoFormWrap.style.display = 'none';
+      });
+      tabSaldo.addEventListener('click', ()=>{
+        tabSaldo.classList.add('active'); tabMov.classList.remove('active');
+        saldoFormWrap.style.display = 'block'; movFormWrap.style.display = 'none';
+      });
+    }
+
     const movForm2 = document.getElementById('movForm');
     if(movForm2){
       movForm2.addEventListener('submit', async (e)=>{
@@ -992,7 +1059,7 @@ function renderDetalhadoBody(wrap, idx, r, d){
         if(!qualif || !data || qtd === ''){ showToast('Preencha qualificação, data e quantidade.'); return; }
         const cur = getDetalhado(idx);
         const movimentos = cur.movimentos ? [...cur.movimentos] : [];
-        movimentos.push({ tipo, qualif, data, codigo, quantidade: Number(qtd), obs, ts: new Date().toISOString() });
+        movimentos.push({ kind:'movimento', tipo, qualif, data, codigo, quantidade: Number(qtd), obs, ts: new Date().toISOString() });
         await saveDetalhado(idx, { ...cur, movimentos });
         renderModeBody(idx);
         renderSaldos();
@@ -1000,7 +1067,54 @@ function renderDetalhadoBody(wrap, idx, r, d){
         showToast('Movimentação registrada.');
       });
     }
+
+    const saldoForm = document.getElementById('saldoForm');
+    if(saldoForm){
+      saldoForm.addEventListener('submit', async (e)=>{
+        e.preventDefault();
+        const data = document.getElementById('sData').value;
+        const sIndef = document.getElementById('sIndef').value;
+        const sGer = document.getElementById('sGer').value;
+        const obs = document.getElementById('sObs').value.trim();
+        if(!data || sIndef === '' || sGer === ''){ showToast('Preencha a data e os dois saldos.'); return; }
+        const cur = getDetalhado(idx);
+        const movimentos = cur.movimentos ? [...cur.movimentos] : [];
+        movimentos.push({ kind:'checkpoint', data, saldoIndefinido: Number(sIndef), saldoGerencial: Number(sGer), obs, ts: new Date().toISOString() });
+        await saveDetalhado(idx, { ...cur, movimentos });
+        renderModeBody(idx);
+        renderSaldos();
+        renderItemList();
+        showToast('Saldo na data registrado.');
+      });
+    }
   }
+}
+
+function saldoFormHtml(){
+  return `
+      <form class="base-form" id="saldoForm">
+        <div>
+          <label>Data</label>
+          <input type="date" id="sData" required>
+        </div>
+        <div>
+          <label>Saldo indefinido nessa data</label>
+          <input type="number" id="sIndef" placeholder="ex: 12" required>
+        </div>
+        <div>
+          <label>Saldo gerencial nessa data</label>
+          <input type="number" id="sGer" placeholder="ex: 9" required>
+        </div>
+        <div>
+          <button type="submit" class="btn small">Adicionar saldo</button>
+        </div>
+      </form>
+      <div style="margin:-6px 0 14px;">
+        <label style="font-size:0.72rem; color:var(--ink-soft); font-weight:600; display:block; margin-bottom:4px;">Observação (opcional)</label>
+        <textarea id="sObs" placeholder="ex: contagem física, saldo conferido no sistema…" style="width:100%; border:1px solid var(--line); border-radius:7px; padding:8px 10px; font-family:var(--sans); font-size:0.85rem;"></textarea>
+      </div>
+      <p style="color:var(--ink-soft); font-size:0.76rem; margin:-8px 0 14px;">Use esta opção quando não quiser lançar cada entrada/saída: informe direto o saldo real de cada qualificação numa data — o cálculo continua dali pra frente.</p>
+  `;
 }
 
 function movFormHtml(){
@@ -1061,6 +1175,21 @@ function renderTimeline(idx){
   }
   const rowsHtml = calc.timeline.map((m, i)=>{
     const dataFmt = m.data ? m.data.split('-').reverse().join('/') : '';
+    const fd = formatDiferenca(m.diferencaApos);
+    if(m.kind === 'checkpoint'){
+      return `
+      <tr class="checkpoint-row">
+        <td>${dataFmt}</td>
+        <td colspan="3"><span class="qualif-chip qualif-checkpoint">📌 Saldo informado</span></td>
+        <td class="mono">—</td>
+        <td class="mono">${m.saldoIndefApos}</td>
+        <td class="mono">${m.saldoGerApos}</td>
+        <td class="mono" style="color:${m.diferencaApos===0?'var(--green)':'var(--navy)'}; font-weight:700;" title="${fd.texto}">${fd.texto}</td>
+        <td>${m.obs ? `<span title="${m.obs.replace(/"/g,'&quot;')}">${m.obs}</span>` : ''}</td>
+        <td><button class="btn danger small" data-i="${i}">✕</button></td>
+      </tr>
+      `;
+    }
     const qualifClass = m.qualif === 'Indefinido' ? 'qualif-indefinido' : m.qualif === 'Gerencial' ? 'qualif-gerencial' : 'qualif-ambas';
     return `
       <tr>
@@ -1071,7 +1200,7 @@ function renderTimeline(idx){
         <td class="mono" style="color:${m.quantidade>=0?'var(--green)':'var(--red)'}">${m.quantidade>0?'+':''}${m.quantidade}</td>
         <td class="mono">${m.saldoIndefApos}</td>
         <td class="mono">${m.saldoGerApos}</td>
-        <td class="mono" style="color:${m.diferencaApos===0?'var(--green)':'var(--red)'}; font-weight:700;">${m.diferencaApos>0?'+':''}${m.diferencaApos}</td>
+        <td class="mono" style="color:${m.diferencaApos===0?'var(--green)':'var(--navy)'}; font-weight:700;" title="${fd.texto}">${fd.texto}</td>
         <td>${m.obs ? `<span title="${m.obs.replace(/"/g,'&quot;')}">${m.obs}</span>` : ''}</td>
         <td><button class="btn danger small" data-i="${i}">✕</button></td>
       </tr>
@@ -1230,7 +1359,11 @@ document.getElementById('exportBtn').addEventListener('click', ()=>{
       lines.push(`Status: ${statusLabel(rowStatus(r))}`);
       lines.push('Movimentações registradas:');
       calc.timeline.forEach(m=>{
-        lines.push(`  - [${m.data ? m.data.split('-').reverse().join('/') : '-'}] ${m.tipo || '-'} | Qualificação: ${m.qualif} | Código: ${m.codigo || '-'} | Qtd: ${m.quantidade} | Saldo indef. após: ${m.saldoIndefApos} | Saldo ger. após: ${m.saldoGerApos} | Diferença após: ${m.diferencaApos}${m.obs ? ' | Obs: ' + m.obs : ''}`);
+        if(m.kind === 'checkpoint'){
+          lines.push(`  - [${m.data ? m.data.split('-').reverse().join('/') : '-'}] SALDO INFORMADO | Indefinido: ${m.saldoIndefApos} | Gerencial: ${m.saldoGerApos} | Diferença após: ${m.diferencaApos}${m.obs ? ' | Obs: ' + m.obs : ''}`);
+        }else{
+          lines.push(`  - [${m.data ? m.data.split('-').reverse().join('/') : '-'}] ${m.tipo || '-'} | Qualificação: ${m.qualif} | Código: ${m.codigo || '-'} | Qtd: ${m.quantidade} | Saldo indef. após: ${m.saldoIndefApos} | Saldo ger. após: ${m.saldoGerApos} | Diferença após: ${m.diferencaApos}${m.obs ? ' | Obs: ' + m.obs : ''}`);
+        }
       });
       lines.push('');
       continue;
@@ -1322,10 +1455,10 @@ document.getElementById('exportExcelBtn').addEventListener('click', ()=>{
         'Data base': det.dataBase ? det.dataBase.split('-').reverse().join('/') : '',
         'Saldo base': det.saldoBase,
         'Data': m.data ? m.data.split('-').reverse().join('/') : '',
-        'Tipo de Lançamento': m.tipo,
-        'Qualificação': m.qualif,
-        'Código': m.codigo,
-        'Quantidade': m.quantidade,
+        'Tipo de Lançamento': m.kind === 'checkpoint' ? 'SALDO INFORMADO' : m.tipo,
+        'Qualificação': m.kind === 'checkpoint' ? '-' : m.qualif,
+        'Código': m.kind === 'checkpoint' ? '' : m.codigo,
+        'Quantidade': m.kind === 'checkpoint' ? '' : m.quantidade,
         'Saldo Indefinido Após': m.saldoIndefApos,
         'Saldo Gerencial Após': m.saldoGerApos,
         'Diferença Após': m.diferencaApos,
