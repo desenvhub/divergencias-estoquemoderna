@@ -40,7 +40,7 @@
   }
   .hdr-logo{ height:38px; width:auto; flex-shrink:0;}
   .hdr h1{ margin:0 0 2px; font-size:1.15rem; font-weight:700; letter-spacing:-0.01em;}
-  .hdr .sub{ color:#f3d3de; font-size:0.76rem; margin:0;}
+  .hdr .sub{ color:#ffd9e6; font-size:0.78rem; margin:0; font-weight:500;}
   .hdr-right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
   .date-field{
     background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.25);
@@ -104,6 +104,14 @@
   .btn.small{ padding:6px 12px; font-size:0.78rem;}
   .btn.danger{ background:var(--red); border-color:var(--red);}
   .btn.danger:hover{ background:#8f1e18;}
+  .btn.hdr-primary{
+    background:#fff; color:var(--navy); border:1px solid #fff; font-weight:700;
+  }
+  .btn.hdr-primary:hover{ background:#ffe6ee;}
+  .btn.hdr-secondary{
+    background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.4); font-weight:600;
+  }
+  .btn.hdr-secondary:hover{ background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.6);}
 
   /* TABLE */
   table{ width:100%; border-collapse:collapse; font-size:0.83rem;}
@@ -112,7 +120,7 @@
     font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:700;
     border-bottom:1px solid var(--line); position:sticky; top:0;
   }
-  tbody td{ padding:9px 10px; border-bottom:1px solid #eef0f3; vertical-align:middle;}
+  tbody td{ padding:11px 10px; border-bottom:1px solid #eef0f3; vertical-align:middle; line-height:1.4;}
   tbody tr{ cursor:pointer; transition: background .1s;}
   tbody tr:hover{ background:#f6f9fc;}
   .table-wrap{ max-height:600px; overflow:auto; border:1px solid var(--line); border-radius:10px;}
@@ -129,7 +137,7 @@
     font-size:0.72rem; font-weight:700;
   }
   .status-pendente{ background:var(--amber-bg); color:var(--amber);}
-  .status-parcial{ background:#fce6ee; color:var(--navy);}
+  .status-parcial{ background:#e8eefc; color:#3454a8;}
   .status-resolvido{ background:var(--green-bg); color:var(--green);}
   .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; display:inline-block;}
 
@@ -367,7 +375,7 @@
     padding:18px 16px; text-decoration:none; color:var(--ink); transition:.15s;
     display:flex; flex-direction:column; gap:6px;
   }
-  .cv-month-card.active{ cursor:pointer;}
+  .cv-month-card.active{ cursor:pointer; border-left:3px solid var(--navy);}
   .cv-month-card.active:hover{ border-color:var(--navy); box-shadow:0 4px 14px rgba(30,58,95,0.12); transform:translateY(-2px);}
   .cv-month-card.disabled{ opacity:0.5; cursor:not-allowed; pointer-events:none;}
   .cv-month-name{ font-size:1rem; font-weight:700;}
@@ -502,9 +510,9 @@
       </div>
     </div>
     <div class="hdr-right">
-      <button class="btn ghost" id="exportBtn">Exportar relatório</button>
-      <button class="btn ghost" id="exportExcelBtn">Exportar Excel</button>
-      <button class="btn ghost" id="importBtn">Importar backup antigo</button>
+      <button class="btn hdr-primary" id="exportBtn">Exportar relatório</button>
+      <button class="btn hdr-secondary" id="exportExcelBtn">Exportar Excel</button>
+      <button class="btn hdr-secondary" id="importBtn">Importar backup antigo</button>
       <input type="file" id="importFile" accept="application/json" style="display:none;">
     </div>
   </div>
