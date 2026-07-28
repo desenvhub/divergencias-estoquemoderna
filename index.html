@@ -12,9 +12,11 @@
     --line: #dfe4ea;
     --brand-orange: #ff7a00;
     --brand-pink: #ec1257;
-    --navy: #e01158;
-    --navy-deep: #3a0d22;
+    --navy: #e8590c;
+    --navy-deep: #7a2e04;
     --teal: #ff7a00;
+    --neutral: #46505c;
+    --neutral-bg: #eef0f3;
     --amber: #b8860b;
     --amber-bg: #fff6e0;
     --red: #b3261e;
@@ -40,13 +42,13 @@
   }
   .hdr-logo{ height:38px; width:auto; flex-shrink:0;}
   .hdr h1{ margin:0 0 2px; font-size:1.15rem; font-weight:700; letter-spacing:-0.01em;}
-  .hdr .sub{ color:#ffd9e6; font-size:0.78rem; margin:0; font-weight:500;}
+  .hdr .sub{ color:#ffdcc0; font-size:0.78rem; margin:0; font-weight:500;}
   .hdr-right{ display:flex; gap:10px; align-items:center; flex-wrap:wrap;}
   .date-field{
     background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.25);
     border-radius:10px; padding:8px 14px; display:flex; flex-direction:column; gap:2px;
   }
-  .date-field label{ font-size:0.65rem; text-transform:uppercase; letter-spacing:0.06em; color:#e8b8c8;}
+  .date-field label{ font-size:0.65rem; text-transform:uppercase; letter-spacing:0.06em; color:#f0c9a8;}
   .date-field input{
     background:transparent; border:none; color:#fff; font-family:var(--mono);
     font-size:0.95rem; outline:none; width:150px;
@@ -107,7 +109,7 @@
   .btn.hdr-primary{
     background:#fff; color:var(--navy); border:1px solid #fff; font-weight:700;
   }
-  .btn.hdr-primary:hover{ background:#ffe6ee;}
+  .btn.hdr-primary:hover{ background:#fff0e2;}
   .btn.hdr-secondary{
     background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.4); font-weight:600;
   }
@@ -125,7 +127,7 @@
   tbody tr:hover{ background:#f6f9fc;}
   .table-wrap{ max-height:600px; overflow:auto; border:1px solid var(--line); border-radius:10px;}
   .mono{ font-family:var(--mono); }
-  .item-code{ font-family:var(--mono); font-weight:700; color:var(--navy);}
+  .item-code{ font-family:var(--mono); font-weight:700; color:var(--neutral);}
   .diff-chip{
     display:inline-block; padding:2px 9px; border-radius:20px; font-family:var(--mono);
     font-weight:700; font-size:0.78rem;
@@ -149,14 +151,14 @@
     padding:10px 12px; border-bottom:1px solid #eef0f3; cursor:pointer; transition:.1s;
   }
   .item-row:hover{ background:#f6f9fc;}
-  .item-row.selected{ background:#fce6ee; border-left:3px solid var(--navy);}
+  .item-row.selected{ background:#fff0e2; border-left:3px solid var(--navy);}
   .item-row .r1{ display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;}
-  .item-row .code{ font-family:var(--mono); font-weight:700; font-size:0.85rem; color:var(--navy);}
+  .item-row .code{ font-family:var(--mono); font-weight:700; font-size:0.85rem; color:var(--neutral);}
   .item-row .desc{ font-size:0.72rem; color:var(--ink-soft); line-height:1.3;}
   .item-row .r2{ display:flex; justify-content:space-between; align-items:center; margin-top:5px;}
   .item-row.is-resolved{ background:#fbfdfc; border-left:3px solid var(--green); opacity:0.82;}
   .item-row.is-resolved:hover{ opacity:1;}
-  .item-row.is-resolved.selected{ background:#fce6ee; border-left:3px solid var(--navy); opacity:1;}
+  .item-row.is-resolved.selected{ background:#fff0e2; border-left:3px solid var(--navy); opacity:1;}
   .item-row .check{ color:var(--green); font-weight:800; margin-right:3px;}
 
   .progress-summary{
@@ -307,7 +309,7 @@
   .qualif-chip{
     display:inline-block; padding:1px 8px; border-radius:20px; font-size:0.68rem; font-weight:700;
   }
-  .qualif-indefinido{ background:#fce6ee; color:var(--navy);}
+  .qualif-indefinido{ background:#fff0e2; color:var(--navy);}
   .qualif-gerencial{ background:#f1e8f7; color:#6b3fa0;}
   .qualif-ambas{ background:#fff0e0; color:#b56a1a;}
   .qualif-checkpoint{ background:#dbe4f7; color:var(--navy);}
@@ -329,7 +331,7 @@
     display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.7rem; font-weight:700; white-space:nowrap;
   }
   .tl-situacao-chip.zero{ background:var(--green-bg); color:var(--green);}
-  .tl-situacao-chip.pos{ background:#fce6ee; color:var(--navy);}
+  .tl-situacao-chip.pos{ background:#fff0e2; color:var(--navy);}
   .tl-situacao-chip.neg{ background:var(--amber-bg); color:var(--amber);}
   .tl-obs-btn{
     background:#eef2f8; border:1px solid var(--line); color:var(--navy); font-weight:700;
