@@ -1677,6 +1677,13 @@ function renderEntries(idx){
       startEditEntry(idx, e.ts);
     });
     div.querySelector('button[data-i]').addEventListener('click', async ()=>{
+      const SENHA_EXCLUSAO = 'moderna2026'; // troque por uma senha só sua e evite reaproveitar em outros lugares
+      const senha = window.prompt('Ação irreversível. Digite a senha para confirmar a exclusão deste lançamento:');
+      if(senha === null) return;
+      if(senha !== SENHA_EXCLUSAO){
+        showToast('Senha incorreta. Exclusão cancelada.');
+        return;
+      }
       const list2 = [...entriesCache[idx]];
       list2.splice(i,1);
       await saveEntries(idx, list2);
