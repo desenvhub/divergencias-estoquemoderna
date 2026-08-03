@@ -440,8 +440,8 @@
   .tl-modal-header-left{ min-width:0;}
   .tl-modal-header h2{ margin:0; font-size:1rem; color:var(--navy);}
   .tl-modal-item-info{
-    margin:3px 0 0; font-size:0.78rem; color:var(--ink-soft); white-space:nowrap;
-    overflow:hidden; text-overflow:ellipsis; max-width:520px;
+    margin:3px 0 0; font-size:0.78rem; color:var(--ink-soft); white-space:normal;
+    line-height:1.5;
   }
   .tl-modal-item-info b{ color:var(--ink); font-family:var(--mono);}
   .tl-modal-header-right{ display:flex; align-items:center; gap:12px; flex-shrink:0;}
@@ -1314,7 +1314,7 @@ function renderTimelineModalBody(idx){
   // não perder de vista de qual item é a linha do tempo.
   const itemInfoEl = document.getElementById('timelineModalItemInfo');
   if(itemInfoEl && r){
-    itemInfoEl.innerHTML = `Item <b>${r.item}</b> — ${r.descricaoItem}${r.cor ? ` &nbsp;·&nbsp; Cor: <b>${r.cor}</b>` : ''}`;
+    itemInfoEl.innerHTML = `Item <b>${r.item}</b> — ${r.descricaoItem}<br>Cor: <b>${r.cor} — ${r.descricaoCor}</b> &nbsp;·&nbsp; Variação: <b>${r.variacao} — ${r.descricaoVariacao}</b> &nbsp;·&nbsp; Acabamento: <b>${r.acabamento} — ${r.descricaoAcabamento}</b>`;
   }
 
   // Diferença real do item (a que precisa ser totalmente explicada pelos lançamentos) —
@@ -1338,7 +1338,7 @@ function renderTimelineModalBody(idx){
     <p style="color:var(--ink-soft); font-size:0.78rem; margin:0 0 10px;">
       ${detalhadoReady
         ? 'Cada divergência registrada já entra automaticamente aqui, usando a qualificação (indefinido/gerencial/as duas) escolhida nela. O botão acima serve só para deixar registrado, de forma informativa, o saldo real contado numa data — ele não entra no cálculo da diferença; cada divergência precisa ser lançada separadamente para ser contabilizada.'
-        : 'Histórico das divergências registradas para este item, em ordem cronológica. Ative o "Registro detalhado de divergências" e informe a data base para também poder registrar saldos conhecidos numa data.'}
+        : 'Histórico das divergências registradas para este item, em ordem cronológica.'}
     </p>
     ${detalhadoReady ? `<div id="saldoFormWrap" style="display:none; margin-bottom:14px;">${saldoFormHtml()}</div>` : ''}
     <div id="timelineWrap"></div>
