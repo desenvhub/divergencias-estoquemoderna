@@ -283,6 +283,13 @@
     border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:0.8rem;
   }
   .base-info b{ font-family:var(--mono);}
+  .base-info-simple{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px;
+    padding:9px 14px; border-radius:10px; font-size:0.78rem;
+  }
+  .base-info-simple.set{ background:var(--green-bg); border:1px solid #a9dfc0; color:var(--green);}
+  .base-info-simple.unset{ background:#f4f6f9; border:1px dashed var(--line); color:var(--ink-soft);}
+  .base-info-simple b{ font-family:var(--mono); color:inherit;}
 
   .balance-summary{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px;}
   .balance-card{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:#fff;}
@@ -329,7 +336,9 @@
   .qualif-gerencial{ background:#f1e8f7; color:#6b3fa0;}
   .qualif-ambas{ background:#fff0e0; color:#b56a1a;}
   .qualif-checkpoint{ background:#dbe4f7; color:var(--navy);}
+  .qualif-base{ background:var(--green-bg); color:var(--green);}
   table.timeline tr.checkpoint-row{ background:#f5f8fd;}
+  table.timeline tr.base-row{ background:var(--green-bg);}
   table.timeline td.tl-diff-col{ min-width:82px; white-space:nowrap;}
   table.timeline td.tl-situacao-col{ min-width:120px; white-space:nowrap;}
   table.timeline td.tl-obs-col{ width:90px; min-width:90px; max-width:90px; text-align:center;}
@@ -542,7 +551,7 @@
 
   <div class="stats">
     <div class="stat total clickable" id="statCardTotal" title="Ver todos os itens"><div class="num" id="statTotal">–</div><div class="label">Itens com diferença</div></div>
-    <div class="stat ok clickable" id="statCardResolvido" title="Ver itens resolvidos"><div class="num" id="statResolvido">–</div><div class="label">Resolvidos</div></div>
+    <div class="stat ok clickable" id="statCardResolvido" title="Ver itens identificados"><div class="num" id="statResolvido">–</div><div class="label">Identificados</div></div>
     <div class="stat pend clickable" id="statCardPendente" title="Ver itens pendentes"><div class="num" id="statPendente">–</div><div class="label">Pendentes</div></div>
     <div class="stat qtd"><div class="num" id="statQtd">–</div><div class="label">Unidades em diferença</div></div>
   </div>
@@ -556,7 +565,7 @@
       <option value="">Todos os status</option>
       <option value="pendente">Pendente</option>
       <option value="parcial">Parcial</option>
-      <option value="resolvido">Resolvido</option>
+      <option value="resolvido">Identificado</option>
     </select>
   </div>
 
@@ -569,7 +578,7 @@
           <option value="">Todos os status</option>
           <option value="pendente">Pendente</option>
           <option value="parcial">Parcial</option>
-          <option value="resolvido">Resolvido</option>
+          <option value="resolvido">Identificado</option>
         </select>
       </div>
       <div class="table-wrap">
@@ -667,6 +676,24 @@ const PERIODO_LABEL = 'Julho de 2026';
 const PERIODO_ARQUIVO = 'julho_2026';
 let firebaseConnected = false;
 
+// Soma (ou subtrai, com delta negativo) dias a uma data 'YYYY-MM-DD', sem depender de fuso
+// horário local (usa UTC para não pular/repetir dia perto da meia-noite).
+function addDays(dateStr, delta){
+  const [y,m,dd] = dateStr.split('-').map(Number);
+  const dt = new Date(Date.UTC(y, m-1, dd));
+  dt.setUTCDate(dt.getUTCDate() + delta);
+  const yy = dt.getUTCFullYear();
+  const mm = String(dt.getUTCMonth()+1).padStart(2,'0');
+  const ddOut = String(dt.getUTCDate()).padStart(2,'0');
+  return `${yy}-${mm}-${ddOut}`;
+}
+
+// Data (mais antiga) entre os lançamentos simples de um item, ou null se não houver nenhum.
+function firstEntryDate(idx){
+  const dates = (entriesCache[idx] || []).map(e=> e.data).filter(Boolean).sort();
+  return dates.length ? dates[0] : null;
+}
+
 async function saveEntries(idx, entries){
   entriesCache[idx] = entries;
   try{
@@ -732,6 +759,9 @@ function calcDetalhado(idx){
     }
     return { ...m, diferencaApos: dif };
   });
+  if(d.dataBase){
+    timeline.unshift({ kind:'base', data: d.dataBase, diferencaApos: 0 });
+  }
   return { diferenca: dif, timeline };
 }
 
@@ -756,6 +786,9 @@ function getTimelineData(idx){
     else if(m.qualif === 'Gerencial') dif -= q;
     return { ...m, diferencaApos: dif };
   });
+  if(d.dataBase){
+    timeline.unshift({ kind:'base', data: d.dataBase, diferencaApos: 0 });
+  }
   return { diferenca: dif, timeline };
 }
 
@@ -792,6 +825,9 @@ function attachRealtimeSync(){
     // array (ex.: "entries/23"). Roda uma vez; se migrar algo, este mesmo listener dispara de
     // novo automaticamente com as chaves novas.
     migrateLegacyIndexKeys(data.entries, data.detalhado);
+    // Para itens que já têm lançamentos mas nunca tiveram a "data de saldos iguais"
+    // informada, calcula automaticamente como um dia antes do lançamento mais antigo.
+    autoFillBaseDates();
   }, (error)=>{
     console.error('Erro de conexão com Firebase', error);
     const note = document.getElementById('storageModeNote');
@@ -837,6 +873,35 @@ async function migrateLegacyIndexKeys(rawEntries, rawDetalhado){
     console.error('Erro ao migrar chaves antigas do Firebase', e);
     showToast('Não foi possível migrar automaticamente os dados antigos — avise o suporte.');
     migratedLegacyKeys = false; // permite tentar de novo na próxima sincronização
+  }
+}
+
+// Para todo item que já tem lançamentos registrados mas ainda não tem uma "data de saldos
+// iguais" definida, calcula automaticamente (um dia antes do lançamento mais antigo) e
+// salva — assim ninguém precisa digitar isso à mão para os itens já lançados. Se o usuário
+// já informou a data manualmente em algum item, ela nunca é sobrescrita.
+let autoBaseDatesRunning = false;
+async function autoFillBaseDates(){
+  if(autoBaseDatesRunning) return;
+  const updates = {};
+  let n = 0;
+  for(const idx of Object.keys(entriesCache)){
+    const first = firstEntryDate(idx);
+    if(!first) continue;
+    const cur = getDetalhado(idx);
+    if(cur.dataBase) continue; // já definida (manual ou calculada antes) — nunca sobrescreve
+    updates['controle_divergencias/detalhado/' + idx] = { ...cur, dataBase: addDays(first, -1), dataBaseAuto: true };
+    n++;
+  }
+  if(n === 0) return;
+  autoBaseDatesRunning = true;
+  try{
+    await db.ref().update(updates);
+    showToast(`Data de saldos iguais calculada automaticamente para ${n} ${n===1?'item':'itens'}.`);
+  }catch(e){
+    console.error('Erro ao calcular datas base automaticamente', e);
+  }finally{
+    autoBaseDatesRunning = false;
   }
 }
 
@@ -891,7 +956,7 @@ function rowStatus(row){
   return explained === row.diferenca ? 'resolvido' : 'parcial';
 }
 function statusLabel(s){
-  return s === 'resolvido' ? 'Resolvido' : s === 'parcial' ? 'Parcial' : 'Pendente';
+  return s === 'resolvido' ? 'Identificado' : s === 'parcial' ? 'Parcial' : 'Pendente';
 }
 
 /* ============ RENDER: SALDOS TABLE ============ */
@@ -959,14 +1024,14 @@ function renderDivProgress(){
   const pct = total ? (resolvido/total*100) : 0;
   document.getElementById('divProgress').innerHTML = `
     <div class="progress-summary-row">
-      <span>${resolvido} de ${total} itens resolvidos</span>
+      <span>${resolvido} de ${total} itens identificados</span>
       <span>${pct.toFixed(0)}%</span>
     </div>
     <div class="progress-bar"><div class="progress-fill" style="width:${pct}%; background:var(--green)"></div></div>
     <div class="progress-summary-legend">
       <span><span class="dot" style="color:var(--amber)"></span>${pendente} pendente${pendente!==1?'s':''}</span>
       <span><span class="dot" style="color:var(--navy)"></span>${parcial} parcial${parcial!==1?'is':''}</span>
-      <span><span class="dot" style="color:var(--green)"></span>${resolvido} resolvido${resolvido!==1?'s':''}</span>
+      <span><span class="dot" style="color:var(--green)"></span>${resolvido} identificado${resolvido!==1?'s':''}</span>
     </div>
   `;
 }
@@ -1013,7 +1078,7 @@ function renderItemList(){
   }
 
   const groups = [
-    {key:'resolvido', label:'Resolvidos'},
+    {key:'resolvido', label:'Identificados'},
     {key:'parcial', label:'Parciais'},
     {key:'pendente', label:'Pendentes'}
   ];
@@ -1158,9 +1223,11 @@ function renderSimpleBody(wrap, idx, r){
 
     <h3 style="font-size:0.95rem; margin:18px 0 10px;">Divergências registradas (${entries.length})</h3>
     <div class="entries-list" id="entriesList"></div>
+    <div id="baseInfoSimpleWrap"></div>
   `;
 
   renderEntries(idx);
+  renderBaseInfoSimple(idx);
 
   const toggleBtn = document.getElementById('toggleAddBtn');
   if(toggleBtn){
@@ -1211,6 +1278,60 @@ function renderSimpleBody(wrap, idx, r){
       renderModeBody(idx);
     });
   }
+}
+
+/* Mostra (e permite definir/editar) a data em que os saldos indefinido e gerencial ainda
+   eram iguais — mesmo campo usado pelo "Registro detalhado", mas disponível aqui direto no
+   modo simples, sem precisar ligar o modo detalhado. Serve só como referência: aparece
+   como primeira linha na linha do tempo (linha "Zerada"), não altera o cálculo da diferença
+   dos lançamentos normais. */
+function renderBaseInfoSimple(idx){
+  const box = document.getElementById('baseInfoSimpleWrap');
+  if(!box) return;
+  const d = getDetalhado(idx);
+
+  if(d.dataBase){
+    box.innerHTML = `
+      <div class="base-info-simple set">
+        <span>🏁 Saldos eram iguais até <b>${d.dataBase.split('-').reverse().join('/')}</b>${d.dataBaseAuto ? ' <span style="opacity:0.75; font-weight:400;">(calculado automaticamente, um dia antes do 1º lançamento)</span>' : ''}</span>
+        <button type="button" id="editBaseSimpleBtn" class="btn ghost small">Editar</button>
+      </div>
+    `;
+  }else{
+    box.innerHTML = `
+      <div class="base-info-simple unset">
+        <span>Ainda não há lançamentos suficientes para calcular a data automaticamente.</span>
+        <button type="button" id="editBaseSimpleBtn" class="btn ghost small">+ Informar data</button>
+      </div>
+    `;
+  }
+
+  document.getElementById('editBaseSimpleBtn').addEventListener('click', ()=>{
+    box.innerHTML = `
+      <form class="base-form" id="baseFormSimple" style="margin-top:12px;">
+        <div>
+          <label>Data em que indefinido e gerencial ainda eram iguais</label>
+          <input type="date" id="fDataBaseSimple" value="${d.dataBase || ''}" required>
+        </div>
+        <div style="display:flex; gap:8px;">
+          <button type="submit" class="btn small">Salvar</button>
+          <button type="button" id="cancelBaseSimpleBtn" class="btn ghost small">Cancelar</button>
+        </div>
+      </form>
+    `;
+    document.getElementById('cancelBaseSimpleBtn').addEventListener('click', ()=> renderBaseInfoSimple(idx));
+    document.getElementById('baseFormSimple').addEventListener('submit', async (e)=>{
+      e.preventDefault();
+      const val = document.getElementById('fDataBaseSimple').value;
+      if(!val){ showToast('Informe uma data.'); return; }
+      const cur = getDetalhado(idx);
+      await saveDetalhado(idx, { ...cur, dataBase: val, dataBaseAuto: false });
+      renderBaseInfoSimple(idx);
+      renderSaldos();
+      renderItemList();
+      showToast('Data registrada.');
+    });
+  });
 }
 
 /* ---------- MODO DETALHADO (saldo por qualificação ao longo do período) ---------- */
@@ -1349,7 +1470,7 @@ function renderTimelineModalBody(idx){
 
   body.innerHTML = `
     <div style="display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin:0 0 4px;">
-      <h3 style="font-size:0.95rem; margin:0;">${calc ? calc.timeline.length : 0} movimentações</h3>
+      <h3 style="font-size:0.95rem; margin:0;">${calc ? calc.timeline.filter(m=> m.kind !== 'base').length : 0} movimentações</h3>
       ${detalhadoReady ? `<button type="button" id="toggleSaldoBtn" class="btn ghost small">📌 Informar saldo conhecido numa data</button>` : ''}
     </div>
     <p style="color:var(--ink-soft); font-size:0.78rem; margin:0 0 10px;">
@@ -1541,13 +1662,13 @@ function renderTimeline(idx){
   // item. Se depois dela vier outro lançamento real, o ✓ não aparece em lugar nenhum, porque
   // a diferença já mudou de novo desde então.
   let lastRealIdx = -1;
-  calc.timeline.forEach((m, i)=>{ if(m.kind !== 'checkpoint') lastRealIdx = i; });
+  calc.timeline.forEach((m, i)=>{ if(m.kind !== 'checkpoint' && m.kind !== 'base') lastRealIdx = i; });
 
   const rowsHtml = calc.timeline.map((m, i)=>{
     const dataFmt = m.data ? m.data.split('-').reverse().join('/') : '';
     const obsCell = m.obs ? `<button type="button" class="tl-obs-btn" data-obs-i="${i}" title="Ver observação" aria-label="Ver observação">👁</button>` : '';
     if(m.kind === 'checkpoint'){
-      // Puramente informativo: mostra só o que foi contado em cada qualificação, sem
+      // Apenas informativo: mostra só o que foi contado em cada qualificação, sem
       // diferença calculada nem situação (isso não entra no cálculo).
       return `
       <tr class="checkpoint-row">
@@ -1558,6 +1679,21 @@ function renderTimeline(idx){
         <td class="tl-situacao-col" style="color:var(--ink-soft); font-size:0.72rem;">Apenas informativo</td>
         <td class="tl-obs-col">${obsCell}</td>
         <td style="white-space:nowrap;"><button class="btn ghost small" data-edit-i="${i}">Editar</button> <button class="btn danger small" data-i="${i}">✕</button></td>
+      </tr>
+      `;
+    }
+    if(m.kind === 'base'){
+      // Ponto de partida informado pelo usuário: a data em que indefinido e gerencial
+      // ainda eram iguais. Não é um lançamento — só marca o início da linha do tempo.
+      return `
+      <tr class="base-row">
+        <td>${dataFmt}</td>
+        <td colspan="3"><span class="qualif-chip qualif-base">🏁 Saldos iguais (ponto de partida)</span></td>
+        <td class="mono">—</td>
+        <td class="tl-diff-col"><span class="tl-diff-num-badge zero">0</span></td>
+        <td class="tl-situacao-col"><span class="tl-situacao-chip zero">Zerada</span></td>
+        <td class="tl-obs-col"></td>
+        <td></td>
       </tr>
       `;
     }
