@@ -8,9 +8,17 @@
   :root{
     --bg: #eef1f5;
     --panel: #ffffff;
+    --surface: #ffffff;
+    --surface-soft: #f7f9fb;
+    --surface-soft2: #f4f6f9;
+    --hover: #f6f9fc;
+    --track: #e4e9ef;
+    --track-strong: #c7ced6;
+    --edit-bg: #fff8ec;
     --ink: #1c2b3a;
     --ink-soft: #56697c;
     --line: #dfe4ea;
+    --line-soft: #eef0f3;
     --brand-orange: #ff7a00;
     --brand-pink: #ec1257;
     --navy: #e8590c;
@@ -26,13 +34,79 @@
     --red-bg: #fdecea;
     --green: #1e7d4b;
     --green-bg: #e8f6ee;
+    --shadow: rgba(20,30,45,0.28);
+    /* Tons fixos de "chips"/cartõezinhos que antes eram cores cravadas no CSS (não mudavam
+       com o tema) — por isso ficavam com aspecto embaçado/sujo no modo escuro. Agora cada
+       um tem sua versão clara (idêntica à de sempre) e sua versão escura. */
+    --tint-orange-bg: #fff0e2;
+    --tint-orange-text: var(--navy);
+    --tint-blue-bg: #dbe4f7;
+    --tint-purple-bg: #f1e8f7;
+    --tint-purple-text: #6b3fa0;
+    --tint-indigo-bg: #e8eefc;
+    --tint-indigo-text: #3454a8;
+    --tint-mint-bg: #eef4f3;
+    --tint-mint-border: #cfe3e1;
+    --tint-amber-border: #f0dfa8;
+    --tint-green-border: #a9dfc0;
+    --tint-note-border: #f0dca0;
+    --tint-note-text: #7a5c17;
+    --tint-note-text-strong: #5c4310;
+    --tint-diffcard-border: #c3cfe6;
+    --tint-diffcard-grad: linear-gradient(135deg,#eef2fb,#f5f8fd);
     --mono: 'JetBrains Mono', 'SF Mono', Consolas, monospace;
     --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    color-scheme: light;
   }
+  html[data-theme="dark"]{
+    --bg: #12161c;
+    --panel: #1b2029;
+    --surface: #1b2029;
+    --surface-soft: #20262f;
+    --surface-soft2: #242b35;
+    --hover: #262d38;
+    --track: #2c3542;
+    --track-strong: #3c4756;
+    --edit-bg: #3a2f1a;
+    --ink: #e8ecf1;
+    --ink-soft: #9aa7b6;
+    --line: #2c333f;
+    --line-soft: #2c333f;
+    --neutral: #c3ccd8;
+    --neutral-bg: #262d38;
+    --amber: #e0ab4b;
+    --amber-bg: #3a3110;
+    --red: #ff7a70;
+    --red-bg: #3a1a17;
+    --green: #4fd996;
+    --green-bg: #10321f;
+    --teal: #ff9142;
+    --shadow: rgba(0,0,0,0.55);
+    /* Versões escuras dos chips fixos: fundo escurecido na mesma família de cor, texto
+       clareado o suficiente para manter contraste confortável sobre o fundo escuro. */
+    --tint-orange-bg: #3a2a1c;
+    --tint-orange-text: #ff9a52;
+    --tint-blue-bg: #1c2b47;
+    --tint-purple-bg: #2a2138;
+    --tint-purple-text: #c9a3ef;
+    --tint-indigo-bg: #1d2440;
+    --tint-indigo-text: #9db1ee;
+    --tint-mint-bg: #17251f;
+    --tint-mint-border: #234436;
+    --tint-amber-border: #5c4a1e;
+    --tint-green-border: #1f4a34;
+    --tint-note-border: #5c4a1e;
+    --tint-note-text: #e0c179;
+    --tint-note-text-strong: #f0d9a0;
+    --tint-diffcard-border: #2c3a52;
+    --tint-diffcard-grad: linear-gradient(135deg,#1a2333,#171f2c);
+    color-scheme: dark;
+  }
+  html[data-theme="dark"] .hdr-logo{ filter:brightness(0) invert(1);}
   *{box-sizing:border-box;}
   body{
     margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans);
-    -webkit-font-smoothing:antialiased;
+    -webkit-font-smoothing:antialiased; transition: background .2s, color .2s;
   }
   .app{ max-width:1280px; margin:0 auto; padding:16px 20px 60px; }
 
@@ -61,7 +135,7 @@
   /* STATS */
   .stats{ display:flex; gap:10px; margin:10px 0; flex-wrap:wrap;}
   .stat{
-    background:#f7f9fb; border:1px solid var(--line); border-radius:8px;
+    background:var(--surface-soft); border:1px solid var(--line); border-radius:8px;
     padding:7px 14px; flex:1; min-width:140px;
     display:flex; align-items:baseline; gap:6px;
     transition: background .1s, box-shadow .1s;
@@ -73,7 +147,7 @@
   .stat.total .num{ color:var(--red);}
   .stat.qtd .num{ color:var(--teal);}
   .stat.clickable{ cursor:pointer; position:relative; padding-right:26px;}
-  .stat.clickable:hover{ background:#eef1f5; box-shadow:0 1px 4px rgba(0,0,0,0.07);}
+  .stat.clickable:hover{ background:var(--hover); box-shadow:0 1px 4px rgba(0,0,0,0.07);}
   .stat.clickable::after{
     content:'\203A'; position:absolute; right:10px; top:50%; transform:translateY(-50%);
     color:var(--ink-soft); font-size:1rem; opacity:0.45; font-weight:700;
@@ -103,7 +177,7 @@
   .search:focus{ border-color:var(--navy);}
   .filter-select{
     padding:9px 12px; border:1px solid var(--line); border-radius:8px;
-    font-family:var(--sans); font-size:0.85rem; background:#fff; color:var(--ink);
+    font-family:var(--sans); font-size:0.85rem; background:var(--surface); color:var(--ink);
   }
   .btn{
     padding:9px 16px; border-radius:8px; border:1px solid var(--navy);
@@ -111,30 +185,40 @@
     font-size:0.85rem; cursor:pointer; transition:.15s;
   }
   .btn:hover{ background:var(--navy-deep);}
-  .btn.ghost{ background:#fff; color:var(--navy);}
-  .btn.ghost:hover{ background:#f0f3f7;}
+  .btn.ghost{ background:var(--surface); color:var(--navy);}
+  .btn.ghost:hover{ background:var(--hover);}
   .btn.small{ padding:6px 12px; font-size:0.78rem;}
   .btn.danger{ background:var(--red); border-color:var(--red);}
   .btn.danger:hover{ background:#8f1e18;}
   .btn.hdr-primary{
-    background:#fff; color:var(--navy); border:1px solid #fff; font-weight:700;
+    background:var(--surface); color:var(--navy); border:1px solid var(--surface); font-weight:700;
   }
-  .btn.hdr-primary:hover{ background:#fff0e2;}
+  .btn.hdr-primary:hover{ background:var(--tint-orange-bg);}
   .btn.hdr-secondary{
     background:transparent; color:#fff; border:1px solid rgba(255,255,255,0.4); font-weight:600;
   }
   .btn.hdr-secondary:hover{ background:rgba(255,255,255,0.12); border-color:rgba(255,255,255,0.6);}
+  .btn.hdr-secondary.editing{ background:var(--surface); color:var(--red); border-color:var(--surface); font-weight:700;}
+  .btn.icon-only{ padding:9px 12px; font-size:1rem; line-height:1;}
 
   /* TABLE */
+  .edit-qtd-input{
+    width:64px; padding:4px 6px; border-radius:6px; border:1.5px solid var(--navy);
+    font-family:var(--mono, monospace); font-size:0.82rem; background:var(--edit-bg);
+  }
+  .edit-qtd-input:focus{ outline:none; border-color:var(--red); background:var(--surface);}
+  .save-qtd-btn{ margin-left:8px; vertical-align:middle;}
+  .save-qtd-btn:disabled{ opacity:0.6; cursor:default;}
+
   table{ width:100%; border-collapse:collapse; font-size:0.83rem;}
   thead th{
-    text-align:left; padding:9px 10px; background:#f4f6f9; color:var(--ink-soft);
+    text-align:left; padding:9px 10px; background:var(--surface-soft2); color:var(--ink-soft);
     font-size:0.7rem; text-transform:uppercase; letter-spacing:0.04em; font-weight:700;
     border-bottom:1px solid var(--line); position:sticky; top:0;
   }
-  tbody td{ padding:11px 10px; border-bottom:1px solid #eef0f3; vertical-align:middle; line-height:1.4;}
+  tbody td{ padding:11px 10px; border-bottom:1px solid var(--line-soft); vertical-align:middle; line-height:1.4;}
   tbody tr{ cursor:pointer; transition: background .1s;}
-  tbody tr:hover{ background:#f6f9fc;}
+  tbody tr:hover{ background:var(--hover);}
   .table-wrap{ max-height:600px; overflow:auto; border:1px solid var(--line); border-radius:10px;}
   .mono{ font-family:var(--mono); }
   .item-code{ font-family:var(--mono); font-weight:700; color:var(--neutral);}
@@ -149,7 +233,7 @@
     font-size:0.72rem; font-weight:700;
   }
   .status-pendente{ background:var(--amber-bg); color:var(--amber);}
-  .status-parcial{ background:#e8eefc; color:#3454a8;}
+  .status-parcial{ background:var(--tint-indigo-bg); color:var(--tint-indigo-text);}
   .status-resolvido{ background:var(--green-bg); color:var(--green);}
   .dot{ width:7px; height:7px; border-radius:50%; background:currentColor; display:inline-block;}
 
@@ -158,21 +242,21 @@
   @media (max-width: 860px){ .div-layout{ grid-template-columns: 1fr; } }
   .item-list{ max-height:640px; overflow:auto; border:1px solid var(--line); border-radius:10px;}
   .item-row{
-    padding:10px 12px; border-bottom:1px solid #eef0f3; cursor:pointer; transition:.1s;
+    padding:10px 12px; border-bottom:1px solid var(--line-soft); cursor:pointer; transition:.1s;
   }
-  .item-row:hover{ background:#f6f9fc;}
-  .item-row.selected{ background:#fff0e2; border-left:3px solid var(--navy);}
+  .item-row:hover{ background:var(--hover);}
+  .item-row.selected{ background:var(--tint-orange-bg); border-left:3px solid var(--navy);}
   .item-row .r1{ display:flex; justify-content:space-between; align-items:center; margin-bottom:3px;}
   .item-row .code{ font-family:var(--mono); font-weight:700; font-size:0.85rem; color:var(--neutral);}
   .item-row .desc{ font-size:0.72rem; color:var(--ink-soft); line-height:1.3;}
   .item-row .r2{ display:flex; justify-content:space-between; align-items:center; margin-top:5px;}
-  .item-row.is-resolved{ background:#fbfdfc; border-left:3px solid var(--green); opacity:0.82;}
+  .item-row.is-resolved{ background:var(--surface); border-left:3px solid var(--green); opacity:0.82;}
   .item-row.is-resolved:hover{ opacity:1;}
-  .item-row.is-resolved.selected{ background:#fff0e2; border-left:3px solid var(--navy); opacity:1;}
+  .item-row.is-resolved.selected{ background:var(--tint-orange-bg); border-left:3px solid var(--navy); opacity:1;}
   .item-row .check{ color:var(--green); font-weight:800; margin-right:3px;}
 
   .progress-summary{
-    background:#f7f9fb; border:1px solid var(--line); border-radius:10px;
+    background:var(--surface-soft); border:1px solid var(--line); border-radius:10px;
     padding:10px 12px; margin-bottom:10px;
   }
   .progress-summary-row{ display:flex; justify-content:space-between; font-size:0.75rem; color:var(--ink-soft); margin-bottom:4px;}
@@ -181,7 +265,7 @@
 
   .group-header{
     padding:7px 12px; font-size:0.68rem; font-weight:800; text-transform:uppercase;
-    letter-spacing:0.05em; background:#f4f6f9; border-bottom:1px solid var(--line);
+    letter-spacing:0.05em; background:var(--surface-soft2); border-bottom:1px solid var(--line);
     display:flex; justify-content:space-between; align-items:center;
     position:sticky; top:0; z-index:1;
   }
@@ -194,25 +278,25 @@
   .detail-empty svg{ opacity:0.35; margin-bottom:10px; width:36px; height:36px;}
   .detail-empty-note{
     text-align:left; max-width:440px; margin:20px auto 0; padding:12px 14px;
-    background:var(--amber-bg); border:1px solid #f0dca0; border-radius:10px;
-    font-size:0.8rem; color:#7a5c17; line-height:1.5;
+    background:var(--amber-bg); border:1px solid var(--tint-note-border); border-radius:10px;
+    font-size:0.8rem; color:var(--tint-note-text); line-height:1.5;
   }
-  .detail-empty-note b{ color:#5c4310;}
+  .detail-empty-note b{ color:var(--tint-note-text-strong);}
   .item-title{ font-size:1.15rem; font-weight:700; color:var(--ink); margin:0 0 2px;}
   .item-sub{ color:var(--ink-soft); font-size:0.85rem; margin:0 0 14px;}
   .info-grid{
     display:grid; grid-template-columns:repeat(auto-fit, minmax(110px,1fr)); gap:10px;
-    background:#f7f9fb; border-radius:10px; padding:12px 14px; margin-bottom:18px;
+    background:var(--surface-soft); border-radius:10px; padding:12px 14px; margin-bottom:18px;
   }
   .info-grid div{ font-size:0.72rem; color:var(--ink-soft);}
   .info-grid strong{ display:block; font-family:var(--mono); font-size:0.95rem; color:var(--ink); margin-top:2px;}
 
-  .progress-bar{ height:8px; border-radius:6px; background:#e4e9ef; overflow:hidden; margin:6px 0 2px;}
+  .progress-bar{ height:8px; border-radius:6px; background:var(--track); overflow:hidden; margin:6px 0 2px;}
   .progress-fill{ height:100%; border-radius:6px; background:var(--teal); transition:width .2s;}
 
   form.entry-form{
     display:grid; grid-template-columns: repeat(auto-fit, minmax(130px,1fr)) auto; gap:10px; align-items:end;
-    background:#f7f9fb; border-radius:10px; padding:14px; margin-bottom:16px;
+    background:var(--surface-soft); border-radius:10px; padding:14px; margin-bottom:16px;
   }
   form.entry-form .full{ grid-column:1 / -1; }
   form.entry-form label{ font-size:0.72rem; color:var(--ink-soft); font-weight:600; display:block; margin-bottom:4px;}
@@ -232,7 +316,7 @@
   .entry-main b{ color:var(--navy);}
   .entry-meta{ font-size:0.72rem; color:var(--ink-soft); margin-top:3px;}
   .entry-obs{ font-size:0.78rem; color:var(--ink-soft); margin-top:4px; font-style:italic;}
-  .qty-badge{ font-family:var(--mono); font-weight:700; padding:2px 9px; border-radius:6px; background:#eef1f5;}
+  .qty-badge{ font-family:var(--mono); font-weight:700; padding:2px 9px; border-radius:6px; background:var(--track);}
   .no-entries{ text-align:center; color:var(--ink-soft); padding:24px; font-size:0.85rem;}
 
   .toast{
@@ -243,7 +327,7 @@
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(0);}
 
   ::-webkit-scrollbar{ width:9px; height:9px;}
-  ::-webkit-scrollbar-thumb{ background:#c7ced6; border-radius:6px;}
+  ::-webkit-scrollbar-thumb{ background:var(--track-strong); border-radius:6px;}
   ::-webkit-scrollbar-track{ background:transparent;}
 
   .footer-note{ text-align:center; color:var(--ink-soft); font-size:0.75rem; margin-top:22px;}
@@ -251,7 +335,7 @@
   /* MODO DETALHADO */
   .mode-toggle{
     display:flex; align-items:center; justify-content:space-between; gap:12px;
-    background:#f7f9fb; border:1px solid var(--line); border-radius:10px;
+    background:var(--surface-soft); border:1px solid var(--line); border-radius:10px;
     padding:11px 14px; margin-bottom:16px;
   }
   .mode-toggle .mt-text{ font-size:0.82rem; }
@@ -260,7 +344,7 @@
   .switch{ position:relative; display:inline-block; width:40px; height:22px; flex-shrink:0;}
   .switch input{ opacity:0; width:0; height:0;}
   .switch .slider{
-    position:absolute; cursor:pointer; inset:0; background:#c7ced6; border-radius:22px; transition:.2s;
+    position:absolute; cursor:pointer; inset:0; background:var(--track-strong); border-radius:22px; transition:.2s;
   }
   .switch .slider:before{
     position:absolute; content:""; height:16px; width:16px; left:3px; top:3px;
@@ -271,7 +355,7 @@
 
   .base-form{
     display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)) auto; gap:10px; align-items:end;
-    background:#eef4f3; border:1px solid #cfe3e1; border-radius:10px; padding:14px; margin-bottom:14px;
+    background:var(--tint-mint-bg); border:1px solid var(--tint-mint-border); border-radius:10px; padding:14px; margin-bottom:14px;
   }
   .base-form label{ font-size:0.72rem; color:var(--ink-soft); font-weight:600; display:block; margin-bottom:4px;}
   .base-form input{
@@ -279,7 +363,7 @@
     font-family:var(--sans); font-size:0.85rem; outline:none;
   }
   .base-info{
-    display:flex; gap:18px; flex-wrap:wrap; background:#eef4f3; border:1px solid #cfe3e1;
+    display:flex; gap:18px; flex-wrap:wrap; background:var(--tint-mint-bg); border:1px solid var(--tint-mint-border);
     border-radius:10px; padding:10px 14px; margin-bottom:14px; font-size:0.8rem;
   }
   .base-info b{ font-family:var(--mono);}
@@ -287,12 +371,12 @@
     display:flex; align-items:center; gap:10px; flex-wrap:wrap; margin-top:12px;
     padding:9px 14px; border-radius:10px; font-size:0.78rem;
   }
-  .base-info-simple.set{ background:var(--green-bg); border:1px solid #a9dfc0; color:var(--green);}
+  .base-info-simple.set{ background:var(--green-bg); border:1px solid var(--tint-green-border); color:var(--green);}
   .base-info-simple.unset{ background:#f4f6f9; border:1px dashed var(--line); color:var(--ink-soft);}
   .base-info-simple b{ font-family:var(--mono); color:inherit;}
 
   .balance-summary{ display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; margin-bottom:16px;}
-  .balance-card{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:#fff;}
+  .balance-card{ border:1px solid var(--line); border-radius:10px; padding:12px 14px; background:var(--surface);}
   .balance-card .bc-label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--ink-soft); margin-bottom:4px;}
   .balance-card .bc-row{ display:flex; justify-content:space-between; font-size:0.82rem; margin-top:2px;}
   .balance-card .bc-row b{ font-family:var(--mono);}
@@ -300,7 +384,7 @@
   .balance-card.mismatch{ border-color:var(--amber); background:var(--amber-bg);}
 
   .diff-card{
-    border:1.5px solid #c3cfe6; background:linear-gradient(135deg,#eef2fb,#f5f8fd);
+    border:1.5px solid var(--tint-diffcard-border); background:var(--tint-diffcard-grad);
     border-radius:12px; padding:14px 16px; margin-bottom:16px;
   }
   .diff-card .dc-label{ font-size:0.68rem; text-transform:uppercase; letter-spacing:0.04em; color:var(--navy); font-weight:700; margin-bottom:6px;}
@@ -317,27 +401,27 @@
 
   .seg-tabs{ display:flex; gap:6px; margin-bottom:12px;}
   .seg-tabs button{
-    flex:1; padding:8px 10px; border:1px solid var(--line); background:#fff; border-radius:8px;
+    flex:1; padding:8px 10px; border:1px solid var(--line); background:var(--surface); border-radius:8px;
     font-family:var(--sans); font-size:0.78rem; font-weight:600; color:var(--ink-soft); cursor:pointer;
   }
   .seg-tabs button.active{ background:var(--navy); border-color:var(--navy); color:#fff;}
 
   .timeline-wrap{ max-height:340px; overflow:auto; border:1px solid var(--line); border-radius:10px; margin-bottom:8px;}
   table.timeline th{
-    text-align:left; padding:7px 9px; background:#f4f6f9; color:var(--ink-soft);
+    text-align:left; padding:7px 9px; background:var(--surface-soft2); color:var(--ink-soft);
     font-size:0.66rem; text-transform:uppercase; letter-spacing:0.03em; font-weight:700;
     border-bottom:1px solid var(--line); position:sticky; top:0;
   }
-  table.timeline td{ padding:7px 9px; border-bottom:1px solid #eef0f3; font-size:0.78rem;}
+  table.timeline td{ padding:7px 9px; border-bottom:1px solid var(--line-soft); font-size:0.78rem;}
   .qualif-chip{
     display:inline-block; padding:1px 8px; border-radius:20px; font-size:0.68rem; font-weight:700;
   }
-  .qualif-indefinido{ background:#fff0e2; color:var(--navy);}
-  .qualif-gerencial{ background:#f1e8f7; color:#6b3fa0;}
-  .qualif-ambas{ background:#fff0e0; color:#b56a1a;}
-  .qualif-checkpoint{ background:#dbe4f7; color:var(--navy);}
+  .qualif-indefinido{ background:var(--tint-orange-bg); color:var(--tint-orange-text);}
+  .qualif-gerencial{ background:var(--tint-purple-bg); color:var(--tint-purple-text);}
+  .qualif-ambas{ background:var(--tint-orange-bg); color:var(--tint-orange-text);}
+  .qualif-checkpoint{ background:var(--tint-blue-bg); color:var(--tint-orange-text);}
   .qualif-base{ background:var(--green-bg); color:var(--green);}
-  table.timeline tr.checkpoint-row{ background:#f5f8fd;}
+  table.timeline tr.checkpoint-row{ background:var(--surface-soft);}
   table.timeline tr.base-row{ background:var(--green-bg);}
   table.timeline td.tl-diff-col{ min-width:82px; white-space:nowrap;}
   table.timeline td.tl-situacao-col{ min-width:120px; white-space:nowrap;}
@@ -349,25 +433,25 @@
     display:inline-block; padding:6px 11px; border-radius:9px; font-family:var(--mono);
     font-weight:800; font-size:0.95rem; border:1px solid transparent; white-space:nowrap;
   }
-  .tl-diff-num-badge.nonzero{ background:var(--amber-bg); color:var(--amber); border-color:#f0dfa8;}
-  .tl-diff-num-badge.zero{ background:var(--green-bg); color:var(--green); border-color:#a9dfc0;}
+  .tl-diff-num-badge.nonzero{ background:var(--amber-bg); color:var(--amber); border-color:var(--tint-amber-border);}
+  .tl-diff-num-badge.zero{ background:var(--green-bg); color:var(--green); border-color:var(--tint-green-border);}
   .tl-diff-num-badge.zero::before{ content:"✓ "; }
   .tl-situacao-chip{
     display:inline-block; padding:3px 10px; border-radius:20px; font-size:0.7rem; font-weight:700; white-space:nowrap;
   }
   .tl-situacao-chip.zero{ background:var(--green-bg); color:var(--green);}
-  .tl-situacao-chip.pos{ background:#fff0e2; color:var(--navy);}
+  .tl-situacao-chip.pos{ background:var(--tint-orange-bg); color:var(--tint-orange-text);}
   .tl-situacao-chip.neg{ background:var(--amber-bg); color:var(--amber);}
   .tl-obs-btn{
-    background:#eef2f8; border:1px solid var(--line); color:var(--navy); font-weight:700;
+    background:var(--surface-soft2); border:1px solid var(--line); color:var(--navy); font-weight:700;
     cursor:pointer; display:inline-flex; align-items:center; justify-content:center;
     width:30px; height:30px; border-radius:8px; padding:0; font-size:0.95rem; flex-shrink:0;
   }
-  .tl-obs-btn:hover{ background:#e0e7f2;}
+  .tl-obs-btn:hover{ background:var(--hover);}
   .tl-obs-popover{
     position:fixed; z-index:2000; width:280px; max-width:calc(100vw - 20px);
-    background:#fff; border:1px solid var(--line); border-radius:10px;
-    box-shadow:0 10px 30px rgba(20,30,45,0.28); padding:12px 30px 12px 14px;
+    background:var(--surface); border:1px solid var(--line); border-radius:10px;
+    box-shadow:0 10px 30px var(--shadow); padding:12px 30px 12px 14px;
     font-size:0.8rem; color:var(--ink); line-height:1.45; white-space:pre-wrap; display:none;
   }
   .tl-obs-popover.open{ display:block;}
@@ -414,7 +498,7 @@
     padding:3px 9px; border-radius:20px;
   }
   .cv-month-status.disponivel{ background:var(--green-bg); color:var(--green);}
-  .cv-month-status.embreve{ background:#f1f3f6; color:var(--ink-soft);}
+  .cv-month-status.embreve{ background:var(--surface-soft2); color:var(--ink-soft);}
   .cv-dot{ width:6px; height:6px; border-radius:50%; background:currentColor; display:inline-block;}
 
   /* ---- Linha do tempo: cabeçalho do item + botão de destaque + modal ---- */
@@ -446,15 +530,15 @@
     font-family:var(--sans); font-weight:700; font-size:0.82rem; cursor:pointer; white-space:nowrap;
     display:flex; align-items:center; gap:6px;
   }
-  .tl-cta button:hover{ background:#eef2f8;}
+  .tl-cta button:hover{ background:var(--surface-soft2);}
   .tl-modal-overlay{
     display:none; position:fixed; inset:0; background:rgba(20,30,45,0.55);
     z-index:1000; align-items:flex-start; justify-content:center; padding:4vh 16px; overflow:auto;
   }
   .tl-modal-overlay.open{ display:flex;}
   .tl-modal{
-    background:#fff; border-radius:14px; width:100%; max-width:920px; max-height:92vh;
-    display:flex; flex-direction:column; box-shadow:0 20px 60px rgba(0,0,0,0.3);
+    background:var(--surface); border-radius:14px; width:100%; max-width:920px; max-height:92vh;
+    display:flex; flex-direction:column; box-shadow:0 20px 60px var(--shadow);
   }
   .tl-modal-header{
     display:flex; align-items:flex-start; justify-content:space-between; gap:10px;
@@ -478,13 +562,13 @@
     letter-spacing:0.03em; opacity:0.85; white-space:nowrap;
   }
   .tl-target-diff .ttd-value{ font-family:var(--mono); font-size:1.05rem; font-weight:800;}
-  .tl-target-diff.pending{ background:var(--amber-bg); color:var(--amber); border-color:#f0dfa8;}
-  .tl-target-diff.resolved{ background:var(--green-bg); color:var(--green); border-color:#a9dfc0;}
+  .tl-target-diff.pending{ background:var(--amber-bg); color:var(--amber); border-color:var(--tint-amber-border);}
+  .tl-target-diff.resolved{ background:var(--green-bg); color:var(--green); border-color:var(--tint-green-border);}
   .tl-modal-close{
-    border:none; background:#f1f3f6; color:var(--ink-soft); width:30px; height:30px; border-radius:50%;
+    border:none; background:var(--surface-soft2); color:var(--ink-soft); width:30px; height:30px; border-radius:50%;
     font-size:1rem; cursor:pointer; line-height:1;
   }
-  .tl-modal-close:hover{ background:#e5e9ef;}
+  .tl-modal-close:hover{ background:var(--hover);}
   .tl-modal-body{ padding:18px 20px 22px; overflow:auto;}
   .tl-modal-body .timeline-wrap{ max-height:min(52vh, 480px);}
 
@@ -546,6 +630,8 @@
     <div class="hdr-right">
       <button class="btn hdr-primary" id="exportBtn">Exportar relatório</button>
       <button class="btn hdr-secondary" id="exportExcelBtn">Exportar Excel</button>
+      <button class="btn hdr-secondary" id="editDadosBtn" title="Corrigir quantidades da planilha de saldos (protegido por senha)">🔒 Editar dados</button>
+      <button class="btn hdr-secondary icon-only" id="themeToggleBtn" title="Alternar modo claro/escuro" aria-label="Alternar modo claro/escuro">🌙</button>
     </div>
   </div>
 
@@ -672,9 +758,37 @@ const rootRef = db.ref('controle_divergencias');
 
 let entriesCache = {}; // idx -> array of lançamentos
 let detalhadoCache = {}; // idx -> { enabled, dataBase, movimentos: [] } — dataBase é a data em que a diferença era 0
+let overridesCache = {}; // idx -> { saldoIndefinido, saldoGerencial } — correções manuais dos saldos originais (protegido por senha)
 const PERIODO_LABEL = 'Julho de 2026';
 const PERIODO_ARQUIVO = 'julho_2026';
 let firebaseConnected = false;
+let editDataMode = false; // true depois de digitar a senha em "Editar dados" — libera edição de Indefinido/Gerencial na Planilha de Saldos
+const SENHA_EDICAO_DADOS = '006396';
+
+// Sobrescreve, nas linhas em memória (rows), os saldos originais pelos valores corrigidos
+// manualmente (quando existirem), recalculando a diferença. Isso permite corrigir a
+// quantidade de diferença de um item sem precisar regerar a planilha inteira.
+function applyOverrides(){
+  for(const r of rows){
+    const ov = overridesCache[r.idx];
+    if(ov && ov.saldoIndefinido !== undefined && ov.saldoGerencial !== undefined){
+      r.saldoIndefinido = Number(ov.saldoIndefinido);
+      r.saldoGerencial = Number(ov.saldoGerencial);
+      r.diferenca = r.saldoIndefinido - r.saldoGerencial;
+    }
+  }
+}
+
+async function saveOverride(idx, saldoIndefinido, saldoGerencial){
+  const val = { saldoIndefinido, saldoGerencial, editadoEm: new Date().toISOString() };
+  overridesCache[idx] = val;
+  try{
+    await rootRef.child('overrides/' + idx).set(val);
+  }catch(e){
+    console.error('Erro ao salvar correção de saldo no Firebase', e);
+    showToast('Não foi possível salvar a correção — verifique sua conexão.');
+  }
+}
 
 // Soma (ou subtrai, com delta negativo) dias a uma data 'YYYY-MM-DD', sem depender de fuso
 // horário local (usa UTC para não pular/repetir dia perto da meia-noite).
@@ -815,6 +929,8 @@ function attachRealtimeSync(){
     const data = snapshot.val() || {};
     entriesCache = data.entries || {};
     detalhadoCache = data.detalhado || {};
+    overridesCache = data.overrides || {};
+    applyOverrides();
     firebaseConnected = true;
     const note = document.getElementById('storageModeNote');
     if(note) note.textContent = '🔗 Conectado ao Firebase — dados compartilhados em tempo real com quem mais tiver este link.';
@@ -976,18 +1092,50 @@ function renderSaldos(){
   for(const r of visible){
     const st = rowStatus(r);
     const tr = document.createElement('tr');
+    const indefinidoCell = editDataMode
+      ? `<td class="mono"><input type="number" class="edit-qtd-input" data-idx="${r.idx}" data-field="saldoIndefinido" value="${r.saldoIndefinido}"></td>`
+      : `<td class="mono">${r.saldoIndefinido}</td>`;
+    const gerencialCell = editDataMode
+      ? `<td class="mono"><input type="number" class="edit-qtd-input" data-idx="${r.idx}" data-field="saldoGerencial" value="${r.saldoGerencial}"></td>`
+      : `<td class="mono">${r.saldoGerencial}</td>`;
+    // No modo de edição, a diferença mostrada aqui é só uma prévia ao vivo (recalculada
+    // enquanto a pessoa digita) — nada é salvo até clicar em "Salvar". Isso permite editar
+    // Indefinido e Gerencial juntos e aplicar as duas alterações de uma vez só.
+    const diffCell = editDataMode
+      ? `<td><span class="diff-chip diff-preview ${r.diferenca>=0?'diff-pos':'diff-neg'}" data-idx="${r.idx}">${r.diferenca>0?'+':''}${r.diferenca}</span>
+           <button type="button" class="btn ghost small save-qtd-btn" data-idx="${r.idx}" title="Salvar as duas quantidades desta linha">💾 Salvar</button></td>`
+      : `<td><span class="diff-chip ${r.diferenca>=0?'diff-pos':'diff-neg'}">${r.diferenca>0?'+':''}${r.diferenca}</span></td>`;
     tr.innerHTML = `
       <td class="item-code">${r.item}</td>
       <td>${r.descricaoItem}</td>
       <td><span class="mono" style="color:var(--ink-soft);font-size:0.75rem;">${r.cor}</span> ${r.descricaoCor}</td>
       <td><span class="mono" style="color:var(--ink-soft);font-size:0.75rem;">${r.variacao}</span> ${r.descricaoVariacao}</td>
       <td><span class="mono" style="color:var(--ink-soft);font-size:0.75rem;">${r.acabamento}</span> ${r.descricaoAcabamento}</td>
-      <td class="mono">${r.saldoIndefinido}</td>
-      <td class="mono">${r.saldoGerencial}</td>
-      <td><span class="diff-chip ${r.diferenca>=0?'diff-pos':'diff-neg'}">${r.diferenca>0?'+':''}${r.diferenca}</span></td>
+      ${indefinidoCell}
+      ${gerencialCell}
+      ${diffCell}
       <td><span class="status-badge status-${st}"><span class="dot"></span>${statusLabel(st)}</span></td>
     `;
-    tr.addEventListener('click', ()=> goToItem(r.idx));
+    if(editDataMode){
+      // Recalcula só a prévia (chip) ao digitar, sem salvar nada ainda.
+      const inputs = tr.querySelectorAll('.edit-qtd-input');
+      const previewChip = tr.querySelector('.diff-preview');
+      const updatePreview = ()=>{
+        const vIndef = Number(tr.querySelector('[data-field="saldoIndefinido"]').value);
+        const vGer = Number(tr.querySelector('[data-field="saldoGerencial"]').value);
+        if(!Number.isFinite(vIndef) || !Number.isFinite(vGer)) return;
+        const diff = vIndef - vGer;
+        previewChip.textContent = (diff > 0 ? '+' : '') + diff;
+        previewChip.classList.toggle('diff-pos', diff >= 0);
+        previewChip.classList.toggle('diff-neg', diff < 0);
+      };
+      inputs.forEach(inp=>{
+        inp.addEventListener('click', (e)=> e.stopPropagation());
+        inp.addEventListener('input', updatePreview);
+      });
+    }else{
+      tr.addEventListener('click', ()=> goToItem(r.idx));
+    }
     tbody.appendChild(tr);
   }
 
@@ -1924,6 +2072,89 @@ document.querySelectorAll('.tab-btn').forEach(btn=>{
     document.getElementById('view-' + btn.dataset.view).classList.add('active');
     if(btn.dataset.view === 'divergencias') renderItemList();
   });
+});
+
+/* ============ MODO ESCURO (opcional, a critério de quem estiver usando) ============ */
+// Preferência salva no navegador da pessoa > preferência do sistema operacional > claro (padrão).
+// Nunca é obrigatório: quem não mexer no botão continua vendo exatamente o tema de sempre
+// (claro, ou escuro se o sistema já estiver configurado assim).
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  const btn = document.getElementById('themeToggleBtn');
+  // Só o ícone (sol/lua) — sem o texto "modo escuro/claro" ao lado.
+  if(btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+}
+function getInitialTheme(){
+  try{
+    const saved = localStorage.getItem('mm-tema');
+    if(saved === 'dark' || saved === 'light') return saved;
+  }catch(e){ /* localStorage indisponível — segue sem salvar preferência */ }
+  if(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) return 'dark';
+  return 'light';
+}
+applyTheme(getInitialTheme());
+document.getElementById('themeToggleBtn').addEventListener('click', ()=>{
+  const atual = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+  const novo = atual === 'dark' ? 'light' : 'dark';
+  applyTheme(novo);
+  try{ localStorage.setItem('mm-tema', novo); }catch(e){}
+});
+
+/* ============ EDITAR DADOS (protegido por senha) ============ */
+// Libera a edição direta de Indefinido/Gerencial na Planilha de Saldos — útil quando alguma
+// correção foi feita depois que a tabela original foi gerada e a diferença mostrada não
+// bate mais com a realidade. A diferença é sempre recalculada a partir dos dois valores.
+document.getElementById('editDadosBtn').addEventListener('click', ()=>{
+  const btn = document.getElementById('editDadosBtn');
+  if(editDataMode){
+    editDataMode = false;
+    btn.textContent = '🔒 Editar dados';
+    btn.classList.remove('editing');
+    renderSaldos();
+    return;
+  }
+  const senha = window.prompt('Área restrita. Digite a senha para editar as quantidades da planilha de saldos:');
+  if(senha === null) return;
+  if(senha !== SENHA_EDICAO_DADOS){
+    showToast('Senha incorreta.');
+    return;
+  }
+  editDataMode = true;
+  btn.textContent = '🔓 Sair da edição';
+  btn.classList.add('editing');
+  const saldosBtn = document.querySelector('.tab-btn[data-view="saldos"]');
+  if(saldosBtn && !saldosBtn.classList.contains('active')) saldosBtn.click();
+  else renderSaldos();
+  showToast('Modo de edição ativado — corrija os valores de Indefinido/Gerencial na tabela.');
+});
+
+// Delegação de evento (fica só uma vez, mesmo com re-render da tabela): salva as DUAS
+// quantidades (Indefinido e Gerencial) de uma linha só quando a pessoa clica em "Salvar" —
+// dá tempo de ajustar as duas antes de gravar, nada é salvo sozinho ao trocar de campo.
+document.getElementById('saldosBody').addEventListener('click', async (ev)=>{
+  const btn = ev.target.closest('.save-qtd-btn');
+  if(!btn) return;
+  ev.stopPropagation();
+  const idxKey = btn.dataset.idx;
+  const row = rows.find(x=> x.idx === idxKey);
+  if(!row) return;
+  const tr = btn.closest('tr');
+  const inputIndef = tr.querySelector('[data-field="saldoIndefinido"]');
+  const inputGer = tr.querySelector('[data-field="saldoGerencial"]');
+  const novoIndef = Number(inputIndef.value);
+  const novoGer = Number(inputGer.value);
+  if(!Number.isFinite(novoIndef) || !Number.isFinite(novoGer)){
+    showToast('Valor inválido — informe números em Indefinido e Gerencial.');
+    return;
+  }
+  row.saldoIndefinido = novoIndef;
+  row.saldoGerencial = novoGer;
+  row.diferenca = novoIndef - novoGer;
+  btn.disabled = true;
+  btn.textContent = 'Salvando…';
+  await saveOverride(row.idx, row.saldoIndefinido, row.saldoGerencial);
+  showToast(`Quantidades do item ${row.item} salvas — nova diferença: ${row.diferenca > 0 ? '+' : ''}${row.diferenca}.`);
+  renderSaldos();
 });
 
 /* ============ SEARCH / FILTER LISTENERS ============ */
